@@ -6,6 +6,11 @@
 </head>
 <body>
 <h2>Book: {{ book.name }}</h2>
+<form action="{% url 'book:book-mark' id=id %}" method="post">
+    {% csrf_token %}
+    <input type="text" name="page_reading">
+    <button type="submit">Mark</button>
+  </form>
 {% for category in book.category.all %}
     <ul>
     <li>{{ category.name }}</li>
@@ -13,7 +18,18 @@
 {% endfor %}
 <img src="{{ book.image }}" alt="">
 <div>
-    {{ book.description }}
+    Description: {{ book.description }}
+    <br>
+    Status: {% if not status %}
+            Unread
+            {% else %}
+                {% if status.status == '1' %}
+                    Reading - {{ status.page_reading }}
+                {% elif status.status == '2' %}
+                    Read
+                {% endif %}
+            {% endif %}
 </div>
+
 </body>
 </html>

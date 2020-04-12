@@ -2,11 +2,10 @@ from django.contrib.auth.models import User
 from django.db import models
 
 
-
 class Account(models.Model):
     ROLE_CHOICES = (
+        ('0', 'admin'),
         ('1', 'normal'),
-        ('0', 'admin')
     )
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
