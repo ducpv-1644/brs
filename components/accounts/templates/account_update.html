@@ -5,11 +5,11 @@
     <title>Title</title>
 </head>
 <body>
-
-<form action="{% url 'book:update-book' id=id %}" method="PUT">
+<h2>Sign up</h2>
+  <form action="{% url 'account:account-update' id=id %}" method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <input type="submit" value="Send message">
-</form>
+    <button type="submit">Update</button>
+  </form>
 </body>
 </html>

@@ -11,10 +11,10 @@ from .views import (
 app_name = 'book'
 
 urlpatterns = [
-    path('', BookListView.as_view(), name='list-book'),
-    path('<int:id>/', BookDetailView.as_view(), name='detail-book'),
-    path('search/', BookSearchView.as_view(), name='search-book'),
-    path('add/', BookCreateView.as_view(), name='create-book'),
-    path('edit/<int:id>/', BookUpdateView.as_view(), name='update-book'),
-    path('del/<int:id>/', BookUpdateView.as_view(), name='delete-book'),
+    path('', BookListView.as_view(), name='book-list'),
+    path('<int:id>/', BookDetailView.as_view(), name='book-detail'),
+    path('search/', BookSearchView.as_view(), name='book-search'),
+    path('add/', BookCreateView.as_view(), name='book-create'),
+    path('edit/<int:id>/', BookUpdateView.as_view(), name='book-update'),
+    path('del/<int:id>/', BookUpdateView.as_view(), name='book-delete'),
 ]

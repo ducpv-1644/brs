@@ -6,7 +6,7 @@ from django.db import models
 class Account(models.Model):
     ROLE_CHOICES = (
         ('1', 'normal'),
-        ('2', 'admin')
+        ('0', 'admin')
     )
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)

@@ -9,10 +9,10 @@
     {% if user.is_authenticated %}
     <p>hello</p>
     <p>welcome {{ user.username }}</p>
-    <p><a href="/logout">Logout</a></p>
+    <p><a href="{% url 'account:signout' %}">Logout</a></p>
     {% else %}
-    <p><a href="/login">Login</a></p>
-    <p><a href="/register">Register</a></p>
+    <p><a href="{% url 'account:signin' %}">Login</a></p>
+    <p><a href="{% url 'account:signup' %}">Register</a></p>
     {% endif %}
     <ul>
     {% for book in books %}

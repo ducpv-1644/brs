@@ -2,20 +2,28 @@ from django.urls import path
 
 from .views import (
     # BookListView,
-    # BookDetailView,
-    # BookSearchView,
-    # BookCreateView,
-    # BookUpdateView
-    SignUpView
+    AccountDetailView,
+    AccountSearchView,
+    AccountDeleteView,
+    AccountUpdateView,
+    SignUpView,
+    SignInView,
+    SignOutView,
+    AccountListView,
+    ChangeRoleAccountView
 )
 
 app_name = 'account'
 
 urlpatterns = [
     path('signup', SignUpView.as_view(), name='signup'),
-    # path('<int:id>/', BookDetailView.as_view(), name='detail-book'),
-    # path('search/', BookSearchView.as_view(), name='search-book'),
-    # path('add/', BookCreateView.as_view(), name='create-book'),
-    # path('edit/<int:id>/', BookUpdateView.as_view(), name='update-book'),
-    # path('del/<int:id>/', BookUpdateView.as_view(), name='delete-book'),
+    path('signin', SignInView.as_view(), name='signin'),
+    path('signout', SignOutView.as_view(), name='signout'),
+    path('change-role', ChangeRoleAccountView.as_view(), name='change-role'),
+
+    path('', AccountListView.as_view(), name='account-list'),
+    path('search/', AccountSearchView.as_view(), name='account-search'),
+    path('edit/<int:id>/', AccountUpdateView.as_view(), name='account-update'),
+    path('<int:id>/', AccountDetailView.as_view(), name='account-detail'),
+    path('del/<int:id>/', AccountDeleteView.as_view(), name='account-delete'),
 ]
