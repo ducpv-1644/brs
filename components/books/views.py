@@ -8,12 +8,14 @@ from django.contrib.postgres.search import SearchVector
 from components.accounts.decorators import admin_required
 from components.accounts.models import Account
 from .models import (
-    Book, BookReadStatus, BookRequestBuy
+    Book, BookReadStatus, BookRequestBuy,
+    BookReview
 )
 from .forms import (
     BookCreateForm, BookUpdateForm,
     BookMarkReadForm, BookFavoriteForm,
     BookRequestBuyForm, BookRequestBuyUpdateForm,
+    BookReviewCreateForm
 )
 
 
@@ -39,10 +41,12 @@ class BookDetailView(View):
                 account__user=request.user
             ).first()
 
+        book_reviews_qs = BookReview.objects.filter(book_id=book_id).first()
         context = {
             'id': book_id,
             'book': book,
-            'status': book_read_status_qs
+            'status': book_read_status_qs,
+            'reviews': book_reviews_qs.messages if book_reviews_qs else []
         }
         return render(request, self.template_name, context)
 
@@ -213,3 +217,35 @@ class BookRequestBuyListView(View):
         else:
             book_request_buy_qs = BookRequestBuy.objects.all()
         return render(request, self.template_name, {'books_request_buys': book_request_buy_qs, 'account': account})
+
+
+class BookReviewCreateView(View):
+    form_class = BookReviewCreateForm
+
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        book_id = kwargs.get('id')
+
+        book_review_form = self.form_class(request.POST)
+        if book_review_form.is_valid():
+            book = Book.objects.get(id=book_id)
+            account = Account.objects.get(user=request.user)
+            book_review_qs = BookReview.objects.filter(book=book).first()
+
+            if book_review_qs:
+                book_messages_review = book_review_qs.messages
+                book_messages_review.append(
+                    [account.user.username, book_review_form.cleaned_data['message']]
+                )
+                book_review_qs.messages = book_messages_review
+                book_review_qs.save()
+            else:
+                BookReview.objects.create(
+                    book=book,
+                    messages=[[account.user.username, book_review_form.cleaned_data['message']]]
+                )
+
+            return redirect(reverse('book:book-detail', kwargs={'id': book_id}))
+
+def index(request):
+    return render(request, 'dashboard.html')

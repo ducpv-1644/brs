@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.contrib.postgres.fields import ArrayField
 
 from components.accounts.models import Account
 
@@ -55,3 +55,11 @@ class BookRequestBuy(models.Model):
 
     def __str__(self):
         return self.book_url
+
+
+class BookReview(models.Model):
+    book = models.OneToOneField(Book, on_delete=models.CASCADE)
+    messages = ArrayField(ArrayField(models.CharField(max_length=512, blank=True)))
+
+    def __str__(self):
+        return self.book.name

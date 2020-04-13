@@ -10,7 +10,9 @@ from .views import (
     BookFavoriteView,
     BookRequestBuyCreateView,
     BookRequestBuyListView,
-    BookRequestBuyUpdateView
+    BookRequestBuyUpdateView,
+    BookReviewCreateView,
+    index
 )
 
 app_name = 'book'
@@ -27,4 +29,6 @@ urlpatterns = [
     path('add-request-buy/', BookRequestBuyCreateView.as_view(), name='add-request-buy'),
     path('list-request-buy/', BookRequestBuyListView.as_view(), name='list-request-buy'),
     path('edit-request-buy/<int:id>', BookRequestBuyUpdateView.as_view(), name='edit-request-buy'),
+    path('review/<int:id>', BookReviewCreateView.as_view(), name='book-review'),
+    path('test', index)
 ]

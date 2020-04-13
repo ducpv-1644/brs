@@ -18,7 +18,6 @@ class BookUpdateForm(forms.ModelForm):
 
 class BookMarkReadForm(forms.Form):
     page_reading = forms.IntegerField(min_value=1)
-    # rating = forms.IntegerField()
 
 
 class BookFavoriteForm(forms.Form):
@@ -33,3 +32,7 @@ class BookRequestBuyForm(forms.ModelForm):
 
 class BookRequestBuyUpdateForm(forms.Form):
     status = forms.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(3)])
+
+
+class BookReviewCreateForm(forms.Form):
+    message = forms.CharField(max_length=512)

@@ -9,7 +9,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 
 from .forms import (
-    SignInForm,
+    SignInForm, SignUpForm,
     ChangeRoleAccountForm,
     AccountUpdateForm
 )
@@ -24,15 +24,15 @@ class SignUpView(View):
         return render(request, self.template_name, {'form': UserCreationForm})
 
     def post(self, request, *args, **kwargs):
-        signup_form = UserCreationForm(request.POST)
-        if signup_form.is_valid():
+        signup_form = SignUpForm(request.POST)
+        if signup_form.is_valid() and signup_form.cleaned_data['terms'] == 'on':
             signup_form.save()
             user = authenticate(username=signup_form.cleaned_data['username'],
                                 password=signup_form.cleaned_data['password1'])
             Account.objects.get_or_create(user=user)
             login(request, user)
 
-            return redirect(reverse('book-list'))
+            return redirect(reverse('book:book-list'))
 
 
 class SignInView(View):
@@ -43,12 +43,12 @@ class SignInView(View):
         return render(request, self.template_name, {'form': self.form_class})
 
     def post(self, request, *args, **kwargs):
-        sigin_form = self.form_class(request.POST)
-        if sigin_form.is_valid():
-            user = authenticate(username=sigin_form.cleaned_data['username'],
-                                password=sigin_form.cleaned_data['password'])
+        signin_form = self.form_class(request.POST)
+        if signin_form.is_valid():
+            user = authenticate(username=signin_form.cleaned_data['username'],
+                                password=signin_form.cleaned_data['password'])
             login(request, user)
-            return redirect(reverse('book-list'))
+            return redirect(reverse('book:book-list'))
         return render(request, self.template_name, {'form': self.form_class})
 
 
@@ -56,7 +56,7 @@ class SignOutView(View):
 
     def get(self, request, *args, **kwargs):
         logout(request)
-        return redirect(reverse('book-list'))
+        return redirect(reverse('book:book-list'))
 
 
 class ChangeRoleAccountView(View):

@@ -40,6 +40,21 @@
                 {% endif %}
             {% endif %}
 </div>
-
+<div>
+    <p>Review</p>
+    <p>Have {{ reviews|length }} comments</p>
+    {% for review in reviews %}
+        <ul>
+        <li>Message: {{ review.0 }}</li>
+        <li>Account: {{ review.1 }}</li>
+        </ul>
+    {% endfor %}
+    <p>Form Review</p>
+    <form action="{% url 'book:book-review' id=id %}" method="post">
+    {% csrf_token %}
+    <input type="text" name="message">
+    <button type="submit">Submit</button>
+</form>
+</div>
 </body>
 </html>
