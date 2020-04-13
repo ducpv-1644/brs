@@ -8,11 +8,12 @@ from django.contrib.postgres.search import SearchVector
 from components.accounts.decorators import admin_required
 from components.accounts.models import Account
 from .models import (
-    Book, BookReadStatus
+    Book, BookReadStatus, BookRequestBuy
 )
 from .forms import (
     BookCreateForm, BookUpdateForm,
-    BookMarkReadForm
+    BookMarkReadForm, BookFavoriteForm,
+    BookRequestBuyForm, BookRequestBuyUpdateForm,
 )
 
 
@@ -107,10 +108,9 @@ class BookDeleteView(View):
 
 
 class BookMarkReadView(View):
-    template_name = 'book_detail.html'
     form_class = BookMarkReadForm
 
-    @method_decorator(login_required())
+    @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
         book = get_object_or_404(Book, pk=kwargs.get('id'))
         account = Account.objects.get(user=request.user)
@@ -138,3 +138,78 @@ class BookMarkReadView(View):
                 )
                 book_read_status_qs.account.add(account)
             return redirect(reverse('book:book-detail', kwargs={'id': kwargs.get('id')}))
+
+
+class BookFavoriteView(View):
+    form_class = BookFavoriteForm
+
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        book = get_object_or_404(Book, pk=kwargs.get('id'))
+        account = Account.objects.get(user=request.user)
+
+        favorite_form = self.form_class(request.POST)
+        if favorite_form.is_valid():
+            is_favorite = favorite_form.cleaned_data['is_favorite']
+            book_read_status_qs = BookReadStatus.objects.filter(
+                account=account,
+                book=book
+            ).first()
+            if book_read_status_qs:
+                book_read_status_qs.is_favorite = is_favorite
+                book_read_status_qs.save()
+
+                return redirect(reverse('book:book-detail', kwargs={'id': kwargs.get('id')}))
+
+
+class BookRequestBuyCreateView(View):
+    template_name = 'book_create_request_buy.html'
+    form_class = BookRequestBuyForm
+
+    @method_decorator(login_required)
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, {'form': self.form_class})
+
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        book_request_buy_form = self.form_class(request.POST)
+        account = Account.objects.get(user=request.user)
+        if book_request_buy_form.is_valid():
+            BookRequestBuy.objects.create(
+                category=book_request_buy_form.cleaned_data['category'],
+                book_url=book_request_buy_form.cleaned_data['book_url'],
+                name=book_request_buy_form.cleaned_data['name'],
+                price=book_request_buy_form.cleaned_data['price'],
+                status='0',  # waiting
+                account=account
+            )
+            return redirect(reverse('book:list-request-buy'))
+
+
+class BookRequestBuyUpdateView(View):
+    form_class = BookRequestBuyUpdateForm
+
+    @method_decorator(admin_required)
+    def post(self, request, *args, **kwargs):
+        book_request_buy_id = kwargs.get('id')
+        book_request_buy_update_form = self.form_class(request.POST)
+        if book_request_buy_update_form.is_valid():
+            book_request_buy_qs = BookRequestBuy.objects.get(id=book_request_buy_id)
+            status = book_request_buy_update_form.cleaned_data['status']
+            book_request_buy_qs.status = str(status)
+            book_request_buy_qs.save()
+
+            return redirect(reverse('book:list-request-buy'))
+
+
+class BookRequestBuyListView(View):
+    template_name = 'book_list_request_buy.html'
+
+    @method_decorator(login_required)
+    def get(self, request, *args, **kwargs):
+        account = Account.objects.get(user=request.user)
+        if account.role == '1':
+            book_request_buy_qs = BookRequestBuy.objects.filter(account=account)
+        else:
+            book_request_buy_qs = BookRequestBuy.objects.all()
+        return render(request, self.template_name, {'books_request_buys': book_request_buy_qs, 'account': account})

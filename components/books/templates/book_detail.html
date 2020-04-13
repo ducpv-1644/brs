@@ -10,7 +10,17 @@
     {% csrf_token %}
     <input type="text" name="page_reading">
     <button type="submit">Mark</button>
-  </form>
+</form>
+<form action="{% url 'book:book-like' id=id %}" method="post">
+    {% csrf_token %}
+    {% if status.is_favorite == True %}
+        <input type="hidden" name="is_favorite" value=0 hidden>
+        <button type="submit">Liked</button>
+    {% else %}
+        <input type="hidden" name="is_favorite" value=1 hidden>
+        <button type="submit">Like</button>
+    {% endif %}
+</form>
 {% for category in book.category.all %}
     <ul>
     <li>{{ category.name }}</li>

@@ -1,6 +1,7 @@
 from django import forms
+from django.core.validators import MaxValueValidator, MinValueValidator
 
-from .models import Book
+from .models import Book, BookRequestBuy
 
 
 class BookCreateForm(forms.ModelForm):
@@ -17,5 +18,18 @@ class BookUpdateForm(forms.ModelForm):
 
 class BookMarkReadForm(forms.Form):
     page_reading = forms.IntegerField(min_value=1)
-    is_favorite = forms.BooleanField(widget=forms.CheckboxInput)
-    rating = forms.IntegerField()
+    # rating = forms.IntegerField()
+
+
+class BookFavoriteForm(forms.Form):
+    is_favorite = forms.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(1)])
+
+
+class BookRequestBuyForm(forms.ModelForm):
+    class Meta:
+        model = BookRequestBuy
+        fields = ['name', 'book_url', 'category', 'price']
+
+
+class BookRequestBuyUpdateForm(forms.Form):
+    status = forms.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(3)])

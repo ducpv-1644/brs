@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>List Request Books</h1>
+{% if user.is_authenticated %}
+    <p>hello</p>
+    <p>welcome {{ user.username }}</p>
+    <p><a href="{% url 'account:signout' %}">Logout</a></p>
+{% else %}
+    <p><a href="{% url 'account:signin' %}">Login</a></p>
+    <p><a href="{% url 'account:signup' %}">Register</a></p>
+{% endif %}
+<ul>
+    {% for request in books_request_buys %}
+        <li>
+            <div>
+                <ul>
+                    <li><span>Name: {{ request.name }}</span></li>
+                    <li><span>Book URL: <a href="{{ request.book_url }}" target="_blank">Link</a></span></li>
+                    <li><span>Price: {{ request.price }}</span></li>
+                    <li><span>
+                        {% if request.status == '0' %}
+                            Waiting
+                        {% elif request.status == '1' %}
+                            Approved
+                        {% elif request.status == '2' %}
+                            Bought
+                        {% else %}
+                            Reject
+                        {% endif %}
+                    </span></li>
+                    {% if account.role == '0' and request.status == '0' %}
+                        <form action="{% url 'book:edit-request-buy' id=request.id %}" method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" value="1" name="status">
+                            <input type="submit" value="Approve">
+                        </form>
+
+                        <form action="{% url 'book:edit-request-buy' id=request.id %}" method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" value="3" name="status">
+                            <input type="submit" value="Reject">
+                        </form>
+                    {% endif %}
+                </ul>
+            </div>
+        </li>
+
+    {% endfor %}
+</ul>
+
+</body>
+</html>
