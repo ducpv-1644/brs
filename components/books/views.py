@@ -22,6 +22,7 @@ from .forms import (
 class BookListView(View):
     template_name = 'book_list.html'
 
+    @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
         books_qs = Book.objects.all()
         return render(request, self.template_name, {'books': books_qs})
@@ -30,6 +31,7 @@ class BookListView(View):
 class BookDetailView(View):
     template_name = 'book_detail.html'
 
+    @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
         book_id = kwargs.get('id')
         book = get_object_or_404(Book, pk=book_id)
@@ -54,6 +56,7 @@ class BookDetailView(View):
 class BookSearchView(View):
     template_name = 'book_list.html'
 
+    @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
         search_text = request.GET.get('q')
         books_qs = Book.objects.annotate(
@@ -246,6 +249,3 @@ class BookReviewCreateView(View):
                 )
 
             return redirect(reverse('book:book-detail', kwargs={'id': book_id}))
-
-def index(request):
-    return render(request, 'dashboard.html')

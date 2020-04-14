@@ -56,7 +56,7 @@ class SignOutView(View):
 
     def get(self, request, *args, **kwargs):
         logout(request)
-        return redirect(reverse('book:book-list'))
+        return redirect(reverse('account:signin'))
 
 
 class ChangeRoleAccountView(View):
