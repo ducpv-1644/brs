@@ -21,6 +21,10 @@ class User(AbstractBaseUser):
     role = models.IntegerField(choices=USER_ROLES, default=ROLE_MEMBER)
     is_activate = models.BooleanField(default=False)
     avatar = models.ImageField(upload_to=user_directory_path, null=True)
+    education = models.CharField(max_length=256, null=True)
+    location = models.CharField(max_length=256, null=True)
+    skills = models.CharField(max_length=256, null=True)
+    notes = models.TextField(null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']

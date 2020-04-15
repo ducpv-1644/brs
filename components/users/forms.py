@@ -55,13 +55,12 @@ class SignInForm(forms.Form):
 
 
 class ChangeRoleAccountForm(forms.Form):
-    username = forms.CharField(min_length=1, max_length=150, label='Username')
+    username = forms.CharField(min_length=1, max_length=150)
     role = forms.ChoiceField(choices=User.USER_ROLES)
 
 
 class AccountUpdateForm(forms.ModelForm):
-    email = forms.EmailField()
 
     class Meta:
         model = User
-        fields = ['avatar']
+        fields = ['username', 'education', 'location', 'skills', 'notes']

@@ -8,8 +8,13 @@
                 <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
             </li>
             <li class="nav-item d-none d-sm-inline-block">
-                <a href="{% url 'book:book-list' %}" class="nav-link">Book</a>
+                <a href="{% url 'book:book-list' %}" class="nav-link">Books</a>
             </li>
+            {% if user.role == 1 %}
+                <li class="nav-item d-none d-sm-inline-block">
+                    <a href="{% url 'users:users-list' %}" class="nav-link">Users</a>
+                </li>
+            {% endif %}
         </ul>
 
         <!-- SEARCH FORM -->

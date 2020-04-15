@@ -61,17 +61,14 @@ class ChangeRoleAccountView(View):
     form_class = ChangeRoleAccountForm
 
     @method_decorator(admin_required)
-    def get(self, request, *args, **kwargs):
-        return render(request, self.template_name, {'form': self.form_class})
-
-    @method_decorator(admin_required)
     def post(self, request, *args, **kwargs):
         change_role_account_form = ChangeRoleAccountForm(request.POST)
         if change_role_account_form.is_valid():
             user = User.objects.filter(username=change_role_account_form.cleaned_data['username']).first()
             if user:
-                user.role = change_role_account_form.cleaned_data['role']
-                return redirect(reverse('users:account-list'))
+                user.role = int(change_role_account_form.cleaned_data['role'])
+                user.save()
+                return redirect(reverse('users:users-list'))
             return render(request, '404.html', {'message': f'User {user.username} not found'})
 
 
@@ -85,54 +82,35 @@ class AccountListView(View):
 
 
 class AccountUpdateView(View):
-    template_name = 'account_update.html'
     form_class = AccountUpdateForm
 
     @method_decorator(login_required)
-    def get(self, request, *args, **kwargs):
-        account = self.__get_user_id(request, **kwargs)
-        if not account:
-            return HttpResponseForbidden('403 Forbidden')
-
-        init_data = {
-            'email': account.user.email,
-            'avatar': account.avatar
-        }
-        account_update_form = self.form_class(initial=init_data)
-        return render(request, self.template_name, {'form': account_update_form, 'id': account.id})
-
-    @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
-        account_update_form = AccountUpdateForm(request.POST)
-        if account_update_form.is_valid():
-            email = account_update_form.cleaned_data['email']
-            avatar = account_update_form.cleaned_data['avatar']
+        user_update_form = AccountUpdateForm(request.POST)
+        if user_update_form.is_valid():
+            user = User.objects.filter(id=kwargs.get('id')).first()
+            if not user:
+                return render(request, '404.html', {'message': 'User not found'})
+            user.username = user_update_form.cleaned_data['username']
+            user.email = user_update_form.cleaned_data['username']
+            user.education = user_update_form.cleaned_data['education']
+            user.skills = user_update_form.cleaned_data['skills']
+            user.notes = user_update_form.cleaned_data['notes']
+            user.location = user_update_form.cleaned_data['location']
+            user.save()
 
-            account = self.__get_user_id(request, **kwargs)
-            account.user.email = email
-            account.user.save()
-
-            account.avatar = avatar
-            account.save()
-
-            return redirect(reverse('users:account-detail', kwargs={'id': account.id}))
-
-    def __get_user_id(self, request, **kwargs):
-        account = get_object_or_404(Account, pk=kwargs.get('id'))
-        if (account.role == '1' and request.user.id == account.user.id) or account.role == '0':
-            return account
+            return redirect(reverse('users:user-detail', kwargs={'id': user.id}))
 
 
 class AccountDetailView(View):
-    template_name = 'account_detail.html'
+    template_name = 'user_detail.html'
 
     @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
-        account_id = kwargs.get('id')
-        account = get_object_or_404(Account, pk=account_id)
-        if account.user.id != request.user.id:
-            return HttpResponseForbidden('403 Forbidden')
-        return render(request, self.template_name, {'account': account})
+        user = User.objects.filter(id=kwargs.get('id')).first()
+        if not user:
+            return render(request, '404.html', {'message': 'User not found'})
+        return render(request, self.template_name, {'member': user})
 
 
 class AccountDeleteView(View):
