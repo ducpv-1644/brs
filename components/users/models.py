@@ -25,6 +25,8 @@ class User(AbstractBaseUser):
     location = models.CharField(max_length=256, null=True)
     skills = models.CharField(max_length=256, null=True)
     notes = models.TextField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']

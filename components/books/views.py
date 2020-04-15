@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.urls import reverse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.decorators import method_decorator
@@ -6,16 +7,15 @@ from django.views import View
 from django.contrib.postgres.search import SearchVector
 
 from components.users.decorators import admin_required
-from components.users.models import User
 from .models import (
     Book, BookReadStatus, BookRequestBuy,
-    BookReview
+    BookReview, BookCategory
 )
 from .forms import (
     BookCreateForm, BookUpdateForm,
     BookMarkReadForm, BookFavoriteForm,
     BookRequestBuyForm, BookRequestBuyUpdateForm,
-    BookReviewCreateForm
+    BookReviewCreateForm, SearchBookForm
 )
 
 
@@ -40,7 +40,7 @@ class BookDetailView(View):
         if request.user:
             book_read_status_qs = BookReadStatus.objects.filter(
                 book=book,
-                account__user=request.user
+                user=request.user
             ).first()
 
         book_reviews_qs = BookReview.objects.filter(book_id=book_id).first()
@@ -55,17 +55,20 @@ class BookDetailView(View):
 
 class BookSearchView(View):
     template_name = 'book_list.html'
+    form_class = SearchBookForm
 
     @method_decorator(login_required)
-    def get(self, request, *args, **kwargs):
-        search_text = request.GET.get('q')
-        books_qs = Book.objects.annotate(
-            search=SearchVector(
-                'name', 'description', 'category__name'
-            )
-        ).filter(search=search_text).distinct('name')
+    def post(self, request, *args, **kwargs):
+        search_form = self.form_class(request.POST)
+        if search_form.is_valid():
+            search_text = search_form.cleaned_data['q']
+            books_qs = Book.objects.annotate(
+                search=SearchVector(
+                    'name', 'description', 'category__name'
+                )
+            ).filter(search=search_text).distinct('name')
 
-        return render(request, self.template_name, {'books': books_qs})
+            return render(request, self.template_name, {'books': books_qs})
 
 
 class BookCreateView(View):
@@ -74,7 +77,12 @@ class BookCreateView(View):
 
     @method_decorator(admin_required)
     def get(self, request, *args, **kwargs):
-        return render(request, self.template_name, {'form': self.form_class})
+        categories = BookCategory.objects.all()
+        context = {
+            'categories': categories,
+            'form': self.form_class
+        }
+        return render(request, self.template_name, context)
 
     @method_decorator(admin_required)
     def post(self, request, *args, **kwargs):
@@ -141,8 +149,8 @@ class BookMarkReadView(View):
                     book=book,
                     status=BookReadStatus.STATUS_CHOICES[1][0],
                     page_reading=page_reading,
-                    user=request.user
                 )
+                book_read_status_qs.user.add(request.user)
             return redirect(reverse('book:book-detail', kwargs={'id': kwargs.get('id')}))
 
 
@@ -229,17 +237,18 @@ class BookReviewCreateView(View):
             book = Book.objects.get(id=book_id)
             book_review_qs = BookReview.objects.filter(book=book).first()
 
+            now = datetime.now()
             if book_review_qs:
                 book_messages_review = book_review_qs.messages
                 book_messages_review.append(
-                    [request.user.username, book_review_form.cleaned_data['message']]
+                    [request.user.username, book_review_form.cleaned_data['message'], now.strftime("%m/%d/%Y, %H:%M:%S")]
                 )
                 book_review_qs.messages = book_messages_review
                 book_review_qs.save()
             else:
                 BookReview.objects.create(
                     book=book,
-                    messages=[[request.user.username, book_review_form.cleaned_data['message']]]
+                    messages=[[request.user.username, book_review_form.cleaned_data['message'], now.strftime("%m/%d/%Y, %H:%M:%S")]]
                 )
 
             return redirect(reverse('book:book-detail', kwargs={'id': book_id}))

@@ -2,19 +2,27 @@
 {% load static %}
 
 {% block title %} Books {{ book.name }} {% endblock %}
-
+{% block page %} Book {{ book.name }}{% endblock %}
+{% block link %}
+    <li class="breadcrumb-item">
+        <a href="{% url 'book:book-list' %}">Book</a>
+    </li>
+    <li class="breadcrumb-item active">
+        <a href="{% url 'book:book-detail' id=book.id %}">{{ book.id }}</a>
+    </li>
+{% endblock %}
 {% block content %}
 
     <div class="card card-solid">
         <div class="card-body">
             <div class="row">
-                <div class="col-12 col-sm-6">
+                <div class="col-12 col-sm-4">
                     <h3 class="d-inline-block d-sm-none">{{ book.name }}</h3>
                     <div class="col-12">
-                        <img src="{{ book.image }}" class="product-image" alt="Product Image">
+                        <img src="{{ book.image }}" class="img-thumbnail" alt="Product Image">
                     </div>
                 </div>
-                <div class="col-12 col-sm-6">
+                <div class="col-12 col-sm-8">
                     <h3 class="my-3">{{ book.name }}</h3>
                     <h4>Book details</h4>
                     <div class="text-muted">
@@ -24,7 +32,10 @@
                             {% endfor %}
                         </p>
                         <p class="text-sm">Author
-                            <b class="d-block">Hoang Truong Minh</b>
+                            <b class="d-block">{{ book.author }}</b>
+                        </p>
+                        <p class="text-sm">Publisher
+                            <b class="d-block">{{ book.publisher }}</b>
                         </p>
                         <p class="text-sm">Paperback
                             <b class="d-block">{{ book.paperback }}</b>
@@ -40,100 +51,109 @@
 
                     <div class="mt-4">
                         <div class="btn btn-primary btn-lg btn-flat">
+
                             <i class="fas fa-bookmark fa-lg mr-2"></i>
                             {% if not status %}
-                                Add to Reading
+                                <button class="btn btn-primary" type="submit" data-toggle="modal"
+                                        data-target="#modal-bookmark">Add to Reading
+                                </button>
                             {% else %}
-                                {% if status.status == '1' %}
-                                    Reading - {{ status.page_reading }}
-                                {% elif status.status == '2' %}
-                                    Read
+                                {% if status.status == 1 %}
+                                    <button class="btn btn-primary" type="submit" data-toggle="modal"
+                                        data-target="#modal-bookmark">Reading
+                                        - page {{ status.page_reading }}</button>
+                                {% elif status.status == 2 %}
+                                    <button class="btn btn-primary" type="submit" data-toggle="modal"
+                                        data-target="#modal-bookmark">Read</button>
                                 {% endif %}
                             {% endif %}
-                        </div>
-                        {#                            <i class="fas fa-heart fa-lg mr-2"></i>#}
-                        <form action="{% url 'book:book-like' id=book.id %}" method="post"
-                              class="btn btn-default btn-lg btn-flat">
-                            {% csrf_token %}
-                            {% if status.is_favorite == True %}
-                                <input type="hidden" name="is_favorite" value=0 hidden>
-                                <button type="submit" class="fas fa-heart fa-lg mr-2">Favorited</button>
-                            {% else %}
-                                <input type="hidden" name="is_favorite" value=1 hidden>
-                                <button type="submit" class="fas fa-heart fa-lg mr-2">Add to Favorite</button>
-                            {% endif %}
-                        </form>
 
+                        </div>
+                        <div class="btn btn-primary btn-lg btn-flat">
+                            <form action="{% url 'book:book-like' id=book.id %}" method="post">
+                                {% csrf_token %}
+                                {% if status.is_favorite == True %}
+                                    <input type="hidden" name="is_favorite" value=0 hidden>
+                                    <i class="fas fa-heart fa-lg mr-2"></i>
+                                    <button class="btn btn-primary" type="submit">Favorited</button>
+                                {% else %}
+                                    <input type="hidden" name="is_favorite" value=1 hidden>
+                                    <i class="fas fa-heart fa-lg mr-2"></i>
+                                    <button class="btn btn-primary" type="submit" value="">Add to Favorite</button>
+                                {% endif %}
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="row mt-4">
-                <nav class="w-100">
-                    <div class="nav nav-tabs" id="product-tab" role="tablist">
-                        <a class="nav-item nav-link active" id="product-desc-tab" data-toggle="tab" href="#product-desc"
-                           role="tab" aria-controls="product-desc" aria-selected="true">Description</a>
-                        <a class="nav-item nav-link" id="product-comments-tab" data-toggle="tab"
-                           href="#product-comments" role="tab" aria-controls="product-comments"
-                           aria-selected="false">{{ reviews|length }} Comments</a>
-                        <a class="nav-item nav-link" id="product-rating-tab" data-toggle="tab" href="#product-rating"
-                           role="tab" aria-controls="product-rating" aria-selected="false">Rating</a>
+                <div class="col-12 col-sm-12">
+                    <div class="col-12">
+                        <hr>
+                        <h4>Description</h4>
+                        <p class="text-muted">{{ book.description }}</p>
                     </div>
-                </nav>
-                <div class="tab-content p-3" id="nav-tabContent">
-                    <div class="tab-pane fade active show" id="product-desc" role="tabpanel"
-                         aria-labelledby="product-desc-tab"> {{ book.description }}
-                    </div>
-                    <div class="tab-pane fade" id="product-comments" role="tabpanel"
-                         aria-labelledby="product-comments-tab">
-                        <div class="row">
-                            {% for review in reviews %}
-                                <div class="col-12">
-                                    <div class="post">
-                                        <div class="user-block">
-                                            <img class="img-circle img-bordered-sm"
-                                                 src="{% static 'img/user1-128x128.jpg' %}" alt="user image">
-                                            <span class="username">
-                                                <a href="#">{{ review.0 }}</a>
-                                            </span>
-                                            <span class="description">Shared publicly - 7:45 PM today</span>
-                                            <p>{{ review.1 }}</p>
-                                        </div>
-                                    </div>
+
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-12 col-sm-12">
+                    <div class="col-12">
+                        <hr>
+                        <h4>Comments</h4>
+                        {% for review in reviews %}
+                            <div class="post">
+                                <div class="user-block">
+                                    <img class="img-circle img-bordered-sm" src="{% static 'img/user1-128x128.jpg' %}"
+                                         alt="user image">
+                                    <span class="username">
+                                    <a href="#">{{ review.0 }}</a>
+                                    <a href="#" class="float-right btn-tool"><i class="fas fa-times"></i></a>
+                                </span>
+                                    <span class="description">Shared publicly - {{ review.2 }}</span>
                                 </div>
-                            {% endfor %}
-                        </div>
-                        <div>
-                            <div class="form-group">
-                                <form action="{% url 'book:book-review' id=id %}" method="post">
-                                    {% csrf_token %}
-                                    <label>Comment</label>
-                                    <textarea class="form-control" rows="3" placeholder="Enter ..."
-                                              name="message"></textarea>
-                                    <br>
-                                    <button type="submit" class="btn btn-primary">Submit</button>
-                                </form>
+                                <!-- /.user-block -->
+                                <p>{{ review.1 }}</p>
+                                <p><a href="#" class="link-black text-sm"><i class="far fa-thumbs-up mr-1"></i>Like</a>
+                                </p>
                             </div>
-                        </div>
-                    </div>
-                    <div class="tab-pane fade" id="product-rating" role="tabpanel" aria-labelledby="product-rating-tab">
-                        Cras ut ipsum ornare, aliquam ipsum non, posuere elit. In hac habitasse platea dictumst. Aenean
-                        elementum leo augue, id fermentum risus efficitur vel. Nulla iaculis malesuada scelerisque.
-                        Praesent vel ipsum felis. Ut molestie, purus aliquam placerat sollicitudin, mi ligula euismod
-                        neque, non bibendum nibh neque et erat. Etiam dignissim aliquam ligula, aliquet feugiat nibh
-                        rhoncus ut. Aliquam efficitur lacinia lacinia. Morbi ac molestie lectus, vitae hendrerit nisl.
-                        Nullam metus odio, malesuada in vehicula at, consectetur nec justo. Quisque suscipit odio velit,
-                        at accumsan urna vestibulum a. Proin dictum, urna ut varius consectetur, sapien justo porta
-                        lectus, at mollis nisi orci et nulla. Donec pellentesque tortor vel nisl commodo ullamcorper.
-                        Donec varius massa at semper posuere. Integer finibus orci vitae vehicula placerat.
+                        {% endfor %}
+                        <form action="{% url 'book:book-review' id=id %}" method="post">
+                            {% csrf_token %}
+                            <textarea class="form-control form-control-sm" rows="3" placeholder="Type a comment"
+                                      name="message"></textarea>
+                            <br>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
         <!-- /.card-body -->
     </div>
-    <form action="{% url 'book:book-mark' id=id %}" method="post">
-        {% csrf_token %}
-        <input type="text" name="page_reading">
-        <button type="submit">Mark</button>
-    </form>
+    <div class="modal fade" id="modal-bookmark" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Bookmark Modal</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <form action="{% url 'book:book-mark' id=book.id %}" method="post">
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <input type="number" class="form-control" id="inputName"
+                               placeholder="Bookmark" name="page_reading" required min=1>
+
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
 {% endblock %}

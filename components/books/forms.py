@@ -7,7 +7,7 @@ from .models import Book, BookRequestBuy
 class BookCreateForm(forms.ModelForm):
     class Meta:
         model = Book
-        fields = ['name', 'description', 'image', 'book_category']
+        fields = ['name', 'description', 'image', 'book_category', 'author', 'paperback', 'language', 'publisher']
 
 
 class BookUpdateForm(forms.ModelForm):
@@ -36,3 +36,7 @@ class BookRequestBuyUpdateForm(forms.Form):
 
 class BookReviewCreateForm(forms.Form):
     message = forms.CharField(max_length=512)
+
+
+class SearchBookForm(forms.Form):
+    q = forms.CharField(max_length=128)

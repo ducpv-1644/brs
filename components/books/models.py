@@ -4,6 +4,15 @@ from django.contrib.postgres.fields import ArrayField
 from components.users.models import User
 
 
+class BookBase(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_activate = models.BooleanField(default=False)
+
+    class Meta:
+        abstract = True
+
+
 class BookCategory(models.Model):
     name = models.CharField(max_length=128, null=False)
 
@@ -14,12 +23,21 @@ class BookCategory(models.Model):
         return self.name
 
 
-class Book(models.Model):
+class Book(BookBase):
+    LANGUAGE_CHOICES = (
+        (0, 'VN'),
+        (1, 'JP'),
+        (2, 'EN'),
+    )
+
     name = models.CharField(max_length=256, null=False)
     description = models.TextField()
-    image = models.URLField(null=False)
+    image = models.URLField(null=False, blank=True)
     book_category = models.ManyToManyField(BookCategory)
+    author = models.CharField(max_length=128, null=True, blank=True)
     paperback = models.IntegerField(default=1)
+    language = models.IntegerField(choices=LANGUAGE_CHOICES, default=0)
+    publisher = models.CharField(max_length=256, null=True, blank=True)
 
     class Meta:
         db_table = 'book'
@@ -28,16 +46,16 @@ class Book(models.Model):
         return self.name
 
 
-class BookReadStatus(models.Model):
+class BookReadStatus(BookBase):
     STATUS_CHOICES = (
-        ('0', 'unread'),
-        ('1', 'reading'),
-        ('2', 'read'),
+        (0, 'unread'),
+        (1, 'reading'),
+        (2, 'read'),
     )
 
     book = models.OneToOneField(Book, on_delete=models.CASCADE)
     user = models.ManyToManyField(User)
-    status = models.CharField(choices=STATUS_CHOICES, default='0', max_length=56)
+    status = models.IntegerField(choices=STATUS_CHOICES, default=0)
     page_reading = models.IntegerField(default=0)
     is_favorite = models.BooleanField(default=False)
 
@@ -48,7 +66,7 @@ class BookReadStatus(models.Model):
         return self.page_reading
 
 
-class BookRequestBuy(models.Model):
+class BookRequestBuy(BookBase):
     STATUS_CHOICES = (
         (1, 'waiting'),
         (2, 'approved'),
@@ -69,7 +87,7 @@ class BookRequestBuy(models.Model):
         return self.book_url
 
 
-class BookReview(models.Model):
+class BookReview(BookBase):
     book = models.OneToOneField(Book, on_delete=models.CASCADE)
     messages = ArrayField(ArrayField(models.CharField(max_length=512, blank=True)))
 
