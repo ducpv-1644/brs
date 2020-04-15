@@ -2,6 +2,14 @@
 {% load static %}
 
 {% block title %} User {{ member.id }} {% endblock %}
+{% block link %}
+    <li class="breadcrumb-item">
+        <a href="{% url 'users:users-list' %}">Users</a>
+    </li>
+    <li class="breadcrumb-item active">
+        <a href="{% url 'users:user-detail' id=member.id %}">{{ member.username }}</a>
+    </li>
+{% endblock %}
 {% block content %}
     <div class="row">
         <div class="col-md-3">
@@ -79,13 +87,16 @@
                         <li class="nav-item"><a class="nav-link active" href="#activity" data-toggle="tab">Activity</a>
                         </li>
                         <li class="nav-item"><a class="nav-link" href="#timeline" data-toggle="tab">Timeline</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#settings-profle" data-toggle="tab">Settings
-                            Profile</a>
-                            {% if user.role == 1 %}
-                                <li class="nav-item">
-                                <a class="nav-link" href="#settings-role" data-toggle="tab">Settings Role</a>
-                            {% endif %}
-                            </li>
+                        {% if member.id == user.id or user.role == 1 %}
+                            <li class="nav-item">
+                            <a class="nav-link" href="#settings-profle" data-toggle="tab">Settings Profile</a>
+                        {% endif %}
+
+                        {% if user.role == 1 %}
+                            <li class="nav-item">
+                            <a class="nav-link" href="#settings-role" data-toggle="tab">Settings Role</a>
+                        {% endif %}
+                        </li>
                     </ul>
                 </div><!-- /.card-header -->
                 <div class="card-body">
@@ -344,7 +355,8 @@
                                 <div class="form-group row">
                                     <label for="inputNotes" class="col-sm-2 col-form-label">Notes</label>
                                     <div class="col-sm-10">
-                                        <textarea class="form-control" id="inputNotes" name="notes">{{ member.notes }}</textarea>
+                                        <textarea class="form-control" id="inputNotes"
+                                                  name="notes">{{ member.notes }}</textarea>
                                     </div>
                                 </div>
                                 <div class="form-group row">

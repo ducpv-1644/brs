@@ -6,7 +6,7 @@
             <img src="{% static 'img/user2-160x160.jpg' %}" class="img-circle elevation-2" alt="User Image">
         </div>
         <div class="info">
-            <a href="#" class="d-block">{{ user.username }}</a>
+            <a href="{% url 'users:user-detail' id=user.id %}" class="d-block">{{ user.username }}</a>
             <small><a href="{% url 'users:signout' %}">SignOut</a></small>
         </div>
     </div>
@@ -18,7 +18,7 @@
             <!-- Add icons to the links using the .nav-icon class
                  with font-awesome or any other icon font library -->
             <li class="nav-item has-treeview menu-open">
-                <a href="{% url 'book:book-list' %}" class="nav-link active">
+                <a href="{% url 'book:book-list' %}" class="nav-link {% if '/book' in request.path %}active{% endif %}">
                     <i class="nav-icon fa fa-book"></i>
                     <p>
                         Book
@@ -27,8 +27,14 @@
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="#" class="nav-link active">
+                        <a href="{% url 'book:book-list' %}" class="nav-link {% if request.path == '/book/' %}active{% endif %}">
                             <i class="far fa-circle nav-icon"></i>
+                            <p>All</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="far fa-thumbs-up nav-icon"></i>
                             <p>Favorite</p>
                         </a>
                     </li>
@@ -46,8 +52,31 @@
                     </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link">
-                            <i class="far fa-circle nav-icon"></i>
+                            <i class="fa fa-shopping-cart nav-icon"></i>
                             <p>Request Buy</p>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li class="nav-item has-treeview menu-open">
+                <a href="{% url 'users:users-list' %}" class="nav-link {% if '/user' in request.path %}active{% endif %}">
+                    <i class="nav-icon fa fa-user"></i>
+                    <p>
+                        Users
+                        <i class="right fas fa-angle-left"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="{% url 'users:users-list' %}" class="nav-link {% if request.path == '/users/' %}active{% endif %}">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>All</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>User Followed</p>
                         </a>
                     </li>
                 </ul>

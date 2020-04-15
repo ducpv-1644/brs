@@ -1,7 +1,5 @@
-from django.contrib.postgres.search import SearchVector
 from django.urls import reverse
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponseForbidden
+from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -13,6 +11,9 @@ from .forms import (
     ChangeRoleAccountForm,
     AccountUpdateForm
 )
+
+from components.books.models import Book, BookRequestBuy
+
 from .models import User
 from .decorators import admin_required
 
@@ -75,7 +76,7 @@ class ChangeRoleAccountView(View):
 class AccountListView(View):
     template_name = 'users_list.html'
 
-    @method_decorator(admin_required)
+    @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
         users = User.objects.filter(is_activate=True)
         return render(request, self.template_name, {'users': users})
@@ -113,27 +114,18 @@ class AccountDetailView(View):
         return render(request, self.template_name, {'member': user})
 
 
-class AccountDeleteView(View):
-
-    @method_decorator(admin_required)
-    def post(self, request, *args, **kwargs):
-        account = get_object_or_404(kwargs.get('id'))
-        account.user.is_active = False
-        account.user.save()
-
-        return redirect(reverse('users:account-list'))
-
-
-class AccountSearchView(View):
-    template_name = 'account_list.html'
+class AdminDashboardView(View):
+    template_name = 'dashboard.html'
 
     @method_decorator(admin_required)
     def get(self, request, *args, **kwargs):
-        search_text = request.GET.get('q')
-        accounts_qs = Account.objects.annotate(
-            search=SearchVector(
-                'user__username', 'user__email'
-            )
-        ).filter(search=search_text).distinct('user__username')
+        users_count = User.objects.all().count()
+        books_count = Book.objects.all().count()
+        books_request_buy_count = BookRequestBuy.objects.filter(status=BookRequestBuy.STATUS_CHOICES[0][0]).count()
+        context = {
+            'users_count': users_count,
+            'books_count': books_count,
+            'books_request_buy_count': books_request_buy_count
 
-        return render(request, self.template_name, {'accounts': accounts_qs})
+        }
+        return render(request, self.template_name, context=context)

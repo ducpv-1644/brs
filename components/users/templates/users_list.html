@@ -2,6 +2,12 @@
 {% load static %}
 
 {% block title %} List users {% endblock %}
+{% block page %}Users{% endblock %}
+{% block link %}
+    <li class="breadcrumb-item active">
+        <a href="{% url 'users:users-list' %}">Users</a>
+    </li>
+{% endblock %}
 
 {% block custom_css %}
     <link rel="stylesheet" href="{% static 'plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">

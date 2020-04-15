@@ -2,8 +2,7 @@ from django.urls import path
 
 from .views import (
     AccountDetailView,
-    AccountSearchView,
-    AccountDeleteView,
+    AdminDashboardView,
     AccountUpdateView,
     SignUpView,
     SignInView,
@@ -21,8 +20,7 @@ urlpatterns = [
 
     path('user/change-role', ChangeRoleAccountView.as_view(), name='change-role'),
     path('users/', AccountListView.as_view(), name='users-list'),
-    path('users/search/', AccountSearchView.as_view(), name='users-search'),
     path('user/<int:id>/edit/', AccountUpdateView.as_view(), name='user-update'),
     path('user/<int:id>/', AccountDetailView.as_view(), name='user-detail'),
-    path('user/<int:id>/del/', AccountDeleteView.as_view(), name='user-delete'),
+    path('dashboard/', AdminDashboardView.as_view(), name='dashboard'),
 ]
