@@ -33,7 +33,7 @@
                             Reject
                         {% endif %}
                     </span></li>
-                    {% if account.role == '0' and request.status == '0' %}
+                    {% if user.role == 1 and request.status == 1 %}
                         <form action="{% url 'book:edit-request-buy' id=request.id %}" method="POST">
                             {% csrf_token %}
                             <input type="hidden" value="1" name="status">

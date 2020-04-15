@@ -1,11 +1,14 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
-from components.accounts.models import Account
+from components.users.models import User
 
 
 class BookCategory(models.Model):
     name = models.CharField(max_length=128, null=False)
+
+    class Meta:
+        db_table = 'book_category'
 
     def __str__(self):
         return self.name
@@ -15,8 +18,11 @@ class Book(models.Model):
     name = models.CharField(max_length=256, null=False)
     description = models.TextField()
     image = models.URLField(null=False)
-    category = models.ManyToManyField(BookCategory)
+    book_category = models.ManyToManyField(BookCategory)
     paperback = models.IntegerField(default=1)
+
+    class Meta:
+        db_table = 'book'
 
     def __str__(self):
         return self.name
@@ -30,10 +36,13 @@ class BookReadStatus(models.Model):
     )
 
     book = models.OneToOneField(Book, on_delete=models.CASCADE)
-    account = models.ManyToManyField(Account)
+    user = models.ManyToManyField(User)
     status = models.CharField(choices=STATUS_CHOICES, default='0', max_length=56)
     page_reading = models.IntegerField(default=0)
     is_favorite = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'book_read_status'
 
     def __str(self):
         return self.page_reading
@@ -41,17 +50,20 @@ class BookReadStatus(models.Model):
 
 class BookRequestBuy(models.Model):
     STATUS_CHOICES = (
-        ('0', 'waiting'),
-        ('1', 'approved'),
-        ('2', 'bought'),
-        ('3', 'reject')
+        (1, 'waiting'),
+        (2, 'approved'),
+        (3, 'bought'),
+        (4, 'reject')
     )
-    category = models.ForeignKey(BookCategory, on_delete=models.CASCADE)
+    book_category = models.ForeignKey(BookCategory, on_delete=models.CASCADE)
     book_url = models.URLField()
     name = models.CharField(max_length=256)
     price = models.IntegerField(default=1)
-    status = models.CharField(choices=STATUS_CHOICES, default='0', max_length=56)
-    account = models.OneToOneField(Account, on_delete=models.CASCADE)
+    status = models.IntegerField(choices=STATUS_CHOICES, default=1)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'book_request_buy'
 
     def __str__(self):
         return self.book_url
@@ -60,6 +72,9 @@ class BookRequestBuy(models.Model):
 class BookReview(models.Model):
     book = models.OneToOneField(Book, on_delete=models.CASCADE)
     messages = ArrayField(ArrayField(models.CharField(max_length=512, blank=True)))
+
+    class Meta:
+        db_table = 'book_review'
 
     def __str__(self):
         return self.book.name

@@ -7,13 +7,13 @@ from .models import Book, BookRequestBuy
 class BookCreateForm(forms.ModelForm):
     class Meta:
         model = Book
-        fields = ['name', 'description', 'image', 'category']
+        fields = ['name', 'description', 'image', 'book_category']
 
 
 class BookUpdateForm(forms.ModelForm):
     class Meta:
         model = Book
-        fields = ['name', 'description', 'image', 'category']
+        fields = ['name', 'description', 'image', 'book_category']
 
 
 class BookMarkReadForm(forms.Form):
@@ -27,7 +27,7 @@ class BookFavoriteForm(forms.Form):
 class BookRequestBuyForm(forms.ModelForm):
     class Meta:
         model = BookRequestBuy
-        fields = ['name', 'book_url', 'category', 'price']
+        fields = ['name', 'book_url', 'book_category', 'price']
 
 
 class BookRequestBuyUpdateForm(forms.Form):

@@ -5,8 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.views import View
 from django.contrib.postgres.search import SearchVector
 
-from components.accounts.decorators import admin_required
-from components.accounts.models import Account
+from components.users.decorators import admin_required
+from components.users.models import User
 from .models import (
     Book, BookReadStatus, BookRequestBuy,
     BookReview
@@ -120,13 +120,12 @@ class BookMarkReadView(View):
     @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
         book = get_object_or_404(Book, pk=kwargs.get('id'))
-        account = Account.objects.get(user=request.user)
 
         mark_read_form = self.form_class(request.POST)
         if mark_read_form.is_valid():
             page_reading = mark_read_form.cleaned_data['page_reading']
             book_read_status_qs = BookReadStatus.objects.filter(
-                account=account,
+                user=request.user,
                 book=book
             ).first()
             if book_read_status_qs and page_reading == book.paperback:
@@ -141,9 +140,9 @@ class BookMarkReadView(View):
                 book_read_status_qs = BookReadStatus.objects.create(
                     book=book,
                     status=BookReadStatus.STATUS_CHOICES[1][0],
-                    page_reading=page_reading
+                    page_reading=page_reading,
+                    user=request.user
                 )
-                book_read_status_qs.account.add(account)
             return redirect(reverse('book:book-detail', kwargs={'id': kwargs.get('id')}))
 
 
@@ -153,13 +152,11 @@ class BookFavoriteView(View):
     @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
         book = get_object_or_404(Book, pk=kwargs.get('id'))
-        account = Account.objects.get(user=request.user)
-
         favorite_form = self.form_class(request.POST)
         if favorite_form.is_valid():
             is_favorite = favorite_form.cleaned_data['is_favorite']
             book_read_status_qs = BookReadStatus.objects.filter(
-                account=account,
+                user=request.user,
                 book=book
             ).first()
             if book_read_status_qs:
@@ -180,7 +177,6 @@ class BookRequestBuyCreateView(View):
     @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
         book_request_buy_form = self.form_class(request.POST)
-        account = Account.objects.get(user=request.user)
         if book_request_buy_form.is_valid():
             BookRequestBuy.objects.create(
                 category=book_request_buy_form.cleaned_data['category'],
@@ -188,7 +184,7 @@ class BookRequestBuyCreateView(View):
                 name=book_request_buy_form.cleaned_data['name'],
                 price=book_request_buy_form.cleaned_data['price'],
                 status='0',  # waiting
-                account=account
+                user=request.user
             )
             return redirect(reverse('book:list-request-buy'))
 
@@ -214,10 +210,9 @@ class BookRequestBuyListView(View):
 
     @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
-        account = Account.objects.get(user=request.user)
-        if account.role == '1':
-            book_request_buy_qs = BookRequestBuy.objects.filter(account=account)
-        else:
+        if request.user.role == 2:  # member
+            book_request_buy_qs = BookRequestBuy.objects.filter(user=request.user)
+        else:  # admin
             book_request_buy_qs = BookRequestBuy.objects.all()
         return render(request, self.template_name, {'books_request_buys': book_request_buy_qs, 'account': account})
 
@@ -232,20 +227,19 @@ class BookReviewCreateView(View):
         book_review_form = self.form_class(request.POST)
         if book_review_form.is_valid():
             book = Book.objects.get(id=book_id)
-            account = Account.objects.get(user=request.user)
             book_review_qs = BookReview.objects.filter(book=book).first()
 
             if book_review_qs:
                 book_messages_review = book_review_qs.messages
                 book_messages_review.append(
-                    [account.user.username, book_review_form.cleaned_data['message']]
+                    [request.user.username, book_review_form.cleaned_data['message']]
                 )
                 book_review_qs.messages = book_messages_review
                 book_review_qs.save()
             else:
                 BookReview.objects.create(
                     book=book,
-                    messages=[[account.user.username, book_review_form.cleaned_data['message']]]
+                    messages=[[request.user.username, book_review_form.cleaned_data['message']]]
                 )
 
             return redirect(reverse('book:book-detail', kwargs={'id': book_id}))
