@@ -28,31 +28,37 @@
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
                         <a href="{% url 'book:book-list' %}"
-                           class="nav-link {% if request.path == '/book/' %}active{% endif %}">
+                           class="nav-link {% if not request.GET and not '/book/category/' == request.path %}active{% endif %}">
                             <i class="far fa-circle nav-icon"></i>
                             <p>All</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="{% url 'book:book-category' %}" class="nav-link {% if '/book/category/' == request.path %}active{% endif %}">
+                            <i class="fa fa-list-alt nav-icon"></i>
+                            <p>Category</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'book:book-list' %}?favorited=true" class="nav-link {% if request.GET.favorited == 'true' %}active{% endif %}">
                             <i class="far fa-thumbs-up nav-icon"></i>
                             <p>Favorite</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="{% url 'book:book-list' %}?reading=true" class="nav-link {% if request.GET.reading == 'true' %}active{% endif %}">
                             <i class="far fa-circle nav-icon"></i>
                             <p>Reading</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="{% url 'book:book-list' %}?read=true" class="nav-link {% if request.GET.read == 'true' %}active{% endif %}">
                             <i class="far fa-circle nav-icon"></i>
                             <p>Read</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="{% url 'book:list-request-buy' %}" class="nav-link">
                             <i class="fa fa-shopping-cart nav-icon"></i>
                             <p>Request Buy</p>
                         </a>
@@ -61,7 +67,7 @@
                         <li class="nav-item">
                             <a href="{% url 'book:book-create' %}" class="nav-link">
                                 <i class="far fa-circle nav-icon"></i>
-                                <p>Add book</p>
+                                <p>Add Book</p>
                             </a>
                         </li>
                     {% endif %}

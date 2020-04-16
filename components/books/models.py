@@ -54,7 +54,7 @@ class BookReadStatus(BookBase):
         (2, 'read'),
     )
 
-    book = models.OneToOneField(Book, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
     user = models.ManyToManyField(User)
     status = models.IntegerField(choices=STATUS_CHOICES, default=0)
     page_reading = models.IntegerField(default=0)
@@ -74,8 +74,8 @@ class BookRequestBuy(BookBase):
         (3, 'bought'),
         (4, 'reject')
     )
-    book_category = models.ForeignKey(BookCategory, on_delete=models.CASCADE)
-    book_url = models.URLField()
+    book_category = models.ManyToManyField(BookCategory)
+    book_url = models.URLField(max_length=512)
     name = models.CharField(max_length=256)
     price = models.IntegerField(default=1)
     status = models.IntegerField(choices=STATUS_CHOICES, default=1)

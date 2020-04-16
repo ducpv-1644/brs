@@ -1,11 +1,14 @@
 from datetime import datetime
 from django.urls import reverse
+from django.db.models import Count
+from django.utils.http import urlencode
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.views import View
 from django.contrib.postgres.search import SearchVector
+from django.db.models.query import Q
 
 from components.users.decorators import admin_required
 from .models import (
@@ -26,7 +29,35 @@ class BookListView(View):
 
     @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
-        books = Book.objects.filter(is_activate=True).order_by('-updated_at')
+        query = Q(is_activate=True)
+
+        books_favorite = []
+        if request.GET.get('favorited') == 'true':
+            books_favorite_qs = BookReadStatus.objects.filter(user=request.user,
+                                                              is_favorite=True).values_list('book_id', flat=True)
+            books_favorite.extend(list(books_favorite_qs))
+
+        if request.GET.get('reading') == 'true':
+            books_favorite_qs = BookReadStatus.objects.filter(user=request.user,
+                                                              status=BookReadStatus.STATUS_CHOICES[1][0]
+                                                              ).values_list('book_id', flat=True)
+            books_favorite.extend(list(books_favorite_qs))
+
+        if request.GET.get('read') == 'true':
+            books_favorite_qs = BookReadStatus.objects.filter(user=request.user,
+                                                              status=BookReadStatus.STATUS_CHOICES[2][0]
+                                                              ).values_list('book_id', flat=True)
+            books_favorite.extend(list(books_favorite_qs))
+
+        if request.GET.get('favorited') == 'true' or request.GET.get('reading') == 'true' or request.GET.get(
+                'read') == 'true':
+            query = query & Q(id__in=list(set(books_favorite)))
+
+        category = request.GET.get('category')
+        if category:
+            query = query & Q(book_category__name=category)
+
+        books = Book.objects.filter(query).order_by('-updated_at')
         paginator = Paginator(books, self.paginate_by)
 
         page_number = request.GET.get('page')
@@ -57,6 +88,15 @@ class BookDetailView(View):
             'reviews': book_reviews_qs.messages if book_reviews_qs else []
         }
         return render(request, self.template_name, context)
+
+
+class BookCategoryView(View):
+    template_name = 'book_category.html'
+
+    def get(self, request, *args, **kwargs):
+        book_categories = BookCategory.objects.annotate(num_book=Count('book')).order_by('name')
+
+        return render(request, self.template_name, {'categories': list(book_categories)})
 
 
 class BookSearchView(View):
@@ -204,21 +244,18 @@ class BookRequestBuyCreateView(View):
     form_class = BookRequestBuyForm
 
     @method_decorator(login_required)
-    def get(self, request, *args, **kwargs):
-        return render(request, self.template_name, {'form': self.form_class})
-
-    @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
         book_request_buy_form = self.form_class(request.POST)
         if book_request_buy_form.is_valid():
-            BookRequestBuy.objects.create(
-                category=book_request_buy_form.cleaned_data['category'],
+            request_book = BookRequestBuy.objects.create(
                 book_url=book_request_buy_form.cleaned_data['book_url'],
                 name=book_request_buy_form.cleaned_data['name'],
                 price=book_request_buy_form.cleaned_data['price'],
-                status='0',  # waiting
                 user=request.user
             )
+            request_book.book_category.set(book_request_buy_form.cleaned_data['book_category'])
+            request_book.save()
+
             return redirect(reverse('book:list-request-buy'))
 
 
@@ -230,9 +267,10 @@ class BookRequestBuyUpdateView(View):
         book_request_buy_id = kwargs.get('id')
         book_request_buy_update_form = self.form_class(request.POST)
         if book_request_buy_update_form.is_valid():
-            book_request_buy_qs = BookRequestBuy.objects.get(id=book_request_buy_id)
-            status = book_request_buy_update_form.cleaned_data['status']
-            book_request_buy_qs.status = str(status)
+            book_request_buy_qs = BookRequestBuy.objects.filter(id=book_request_buy_id).first()
+            if not book_request_buy_qs:
+                return render(request, '404.html', {'message': 'Request book not found'})
+            book_request_buy_qs.status = book_request_buy_update_form.cleaned_data['status']
             book_request_buy_qs.save()
 
             return redirect(reverse('book:list-request-buy'))
@@ -240,14 +278,18 @@ class BookRequestBuyUpdateView(View):
 
 class BookRequestBuyListView(View):
     template_name = 'book_list_request_buy.html'
+    paginate_by = 25
 
     @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
-        if request.user.role == 2:  # member
-            book_request_buy_qs = BookRequestBuy.objects.filter(user=request.user)
-        else:  # admin
-            book_request_buy_qs = BookRequestBuy.objects.all()
-        return render(request, self.template_name, {'books_request_buys': book_request_buy_qs, 'account': account})
+        books_requests_buy_qs = BookRequestBuy.objects.filter(is_activate=True).order_by('-updated_at')
+        categories = BookCategory.objects.all()
+
+        paginator = Paginator(books_requests_buy_qs, self.paginate_by)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        return render(request, self.template_name,
+                      {'books_requests_buy': page_obj, 'categories': categories})
 
 
 class BookReviewCreateView(View):

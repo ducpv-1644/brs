@@ -22,6 +22,7 @@
                         <tr>
                             <th style="width: 10px">#</th>
                             <th>Name</th>
+                            <th>Image</th>
                             <th>Category</th>
                             <th>Author</th>
                         </tr>
@@ -31,12 +32,14 @@
                             <tr>
                                 <td>{{ book.id }}.</td>
                                 <td><a href="{% url 'book:book-detail' id=book.id %}">{{ book.name }}</a></td>
+                                <td><img src="{{ book.image }}" width="75" height="100" class="img-rounded"></td>
                                 <td>
-                                    <ul>
-                                        {% for category in book.book_category.all %}
-                                            <li>{{ category.name }}</li>
-                                        {% endfor %}
-                                    </ul>
+                                    {% for category in book.book_category.all %}
+                                        <p>
+                                            <a href="{% url 'book:book-list' %}?category={{ category.name|urlencode }}">{{ category.name }}</a>
+                                        </p>
+                                    {% endfor %}
+
                                 </td>
                                 <td><span>{{ book.author }}</span></td>
                             </tr>
@@ -58,7 +61,7 @@
                         {% endif %}
                         <li class="page-item">
                             <a class="current page-link">
-                            {{ books.number }}
+                                {{ books.number }}
                             </a>
                         </li>
                         {% if books.has_next %}

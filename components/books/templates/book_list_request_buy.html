@@ -1,57 +1,221 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-<h1>List Request Books</h1>
-{% if user.is_authenticated %}
-    <p>hello</p>
-    <p>welcome {{ user.username }}</p>
-    <p><a href="{% url 'account:signout' %}">Logout</a></p>
-{% else %}
-    <p><a href="{% url 'account:signin' %}">Login</a></p>
-    <p><a href="{% url 'account:signup' %}">Register</a></p>
-{% endif %}
-<ul>
-    {% for request in books_request_buys %}
-        <li>
-            <div>
-                <ul>
-                    <li><span>Name: {{ request.name }}</span></li>
-                    <li><span>Book URL: <a href="{{ request.book_url }}" target="_blank">Link</a></span></li>
-                    <li><span>Price: {{ request.price }}</span></li>
-                    <li><span>
-                        {% if request.status == '0' %}
-                            Waiting
-                        {% elif request.status == '1' %}
-                            Approved
-                        {% elif request.status == '2' %}
-                            Bought
-                        {% else %}
-                            Reject
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %} List Request To Buy Books {% endblock %}
+{% block page %} Request To Buy Books {% endblock %}
+{% block link %}
+    <li class="breadcrumb-item">
+        <a href="{% url 'book:book-list' %}">Book</a>
+    </li>
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">List Request Table</h3>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <button type="button" class="btn btn-primary" data-toggle="modal"
+                            data-target="#modal-add-request">Add Request
+                    </button>
+                    <br>
+                    <br>
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th style="width: 10px">#</th>
+                            <th>Book</th>
+                            <th>Category</th>
+                            <th>User</th>
+                            <th>Price(VND)</th>
+                            <th>Link</th>
+                            <th>Status</th>
+                            {% if user.role == 1 %}
+                                <th>Action</th>
+                            {% endif %}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for req in books_requests_buy %}
+                            <tr>
+                                <td>{{ forloop.counter }}.</td>
+                                <td>{{ req.name }}</td>
+                                <td>
+                                    {% for category in req.book_category.all %}
+                                        <p>
+                                            <a href="{% url 'book:book-list' %}?category={{ category.name|urlencode }}">{{ category.name }}</a>
+                                        </p>
+                                    {% endfor %}
+
+                                </td>
+                                <td><a href="{% url 'users:user-detail' id=req.user.id %}">{{ req.user.username }}</a>
+                                </td>
+                                <td>{{ req.price|intcomma }}</td>
+                                <td><a href="{{ req.book_url }}" target="_blank">{{ req.book_url|truncatechars:50 }}</a>
+                                </td>
+                                <td>
+                                    {% if req.status == 1 %}
+                                        <span class="badge bg-primary">Waiting</span>
+                                    {% elif req.status == 2 %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% elif req.status == 3 %}
+                                        <span class="badge bg-info">Bought</span>
+                                    {% elif req.status == 4 %}
+                                        <span class="badge bg-danger">Reject</span>
+                                    {% endif %}
+                                </td>
+
+                                {% if user.role == 1 %}
+                                    <td>
+                                        <button type="button" class="bg-success modal-approve-request"
+                                                data-toggle="modal"
+                                                data-target="#modal-approve-request"
+                                                data-id="{{ req.id }}">Approve
+                                        </button>
+                                        <button type="button" class="bg-danger modal-reject-request" data-toggle="modal"
+                                                data-target="#modal-reject-request"
+                                                data-id="{{ req.id }}">Reject
+                                        </button>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.card-body -->
+                <div class="card-footer clearfix">
+                    <ul class="pagination pagination-sm m-0 float-right">
+                        {% if books_requests_buy.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">«</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ books_requests_buy.previous_page_number }}">prev</a>
+                            </li>
                         {% endif %}
-                    </span></li>
-                    {% if user.role == 1 and request.status == 1 %}
-                        <form action="{% url 'book:edit-request-buy' id=request.id %}" method="POST">
-                            {% csrf_token %}
-                            <input type="hidden" value="1" name="status">
-                            <input type="submit" value="Approve">
-                        </form>
-
-                        <form action="{% url 'book:edit-request-buy' id=request.id %}" method="POST">
-                            {% csrf_token %}
-                            <input type="hidden" value="3" name="status">
-                            <input type="submit" value="Reject">
-                        </form>
-                    {% endif %}
-                </ul>
+                        <li class="page-item">
+                            <a class="current page-link">
+                                {{ books_requests_buy.number }}
+                            </a>
+                        </li>
+                        {% if books_requests_buy.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ books_requests_buy.next_page_number }}">next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ books_requests_buy.paginator.num_pages }}">»</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
             </div>
-        </li>
-
-    {% endfor %}
-</ul>
-
-</body>
-</html>
+        </div>
+    </div>
+    <!--Modal create request to buy book -->
+    <div class="modal fade" id="modal-add-request" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Add Request To Buy Books Form </h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <form action="{% url 'book:add-request-buy' %}" method="post">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="exampleBookName">Book</label>
+                            <input type="text" class="form-control" id="exampleBookName" placeholder="Book Name"
+                                   name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleBookUrl">Book Url</label>
+                            <input type="text" class="form-control" id="exampleBookUrl" placeholder="Book Url"
+                                   name="book_url" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputCategory">Category</label>
+                            <select id="inputCategory" class="form-control" name="book_category" multiple>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleBookPrice">Price(VND)</label>
+                            <input type="number" class="form-control" id="exampleBookPrice" placeholder="Book Price"
+                                   name="price" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!--Modal create request to buy book -->
+    {% if user.role == 1 %}
+        <div class="modal fade" id="modal-approve-request" aria-hidden="true" style="display: none;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Are you sure to approve this item? </h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <form method="post" id="modal-approve-request-form">
+                        {% csrf_token %}
+                        <input type="number" class="form-control" id="inputStatus" value=2 name="status" hidden>
+                        <div class="modal-footer justify-content-between">
+                            <button type="submit" class="btn btn-primary">Approve</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.modal-content -->
+            </div>
+            <!-- /.modal-dialog -->
+        </div>
+        <div class="modal fade" id="modal-reject-request" aria-hidden="true" style="display: none;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Are you sure to reject this item?</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <form method="post" id="modal-reject-request-form">
+                        {% csrf_token %}
+                        <input type="number" class="form-control" id="inputStatus" value=4 name="status" hidden>
+                        <div class="modal-footer justify-content-between">
+                            <button type="submit" class="btn btn-primary">Reject</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.modal-content -->
+            </div>
+            <!-- /.modal-dialog -->
+        </div>
+    {% endif %}
+{% endblock %}
+{% block custom_js %}
+    <script type="text/javascript">
+        $(document).on("click", ".modal-approve-request", function () {
+            var requestBuyToBookId = $(this).data('id');
+            $("#modal-approve-request-form").attr('action', `/book/edit-request-buy/${requestBuyToBookId}`);
+        });
+        $(document).on("click", ".modal-reject-request", function () {
+            var requestBuyToBookId = $(this).data('id');
+            $("#modal-reject-request-form").attr('action', `/book/edit-request-buy/${requestBuyToBookId}`);
+        });
+    </script>
+{% endblock %}

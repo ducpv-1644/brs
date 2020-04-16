@@ -47,7 +47,7 @@ class BookRequestBuyForm(forms.ModelForm):
 
 
 class BookRequestBuyUpdateForm(forms.Form):
-    status = forms.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(3)])
+    status = forms.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(5)])
 
 
 class BookReviewCreateForm(forms.Form):
