@@ -188,8 +188,15 @@ class BookFavoriteView(View):
             if book_read_status_qs:
                 book_read_status_qs.is_favorite = is_favorite
                 book_read_status_qs.save()
-
-                return redirect(reverse('book:book-detail', kwargs={'id': kwargs.get('id')}))
+            else:
+                book_read_status_qs = BookReadStatus.objects.create(
+                    book=book,
+                    is_favorite=True,
+                    status=BookReadStatus.STATUS_CHOICES[0][0]
+                )
+                book_read_status_qs.user.add(request.user)
+                book_read_status_qs.save()
+            return redirect(reverse('book:book-detail', kwargs={'id': kwargs.get('id')}))
 
 
 class BookRequestBuyCreateView(View):
