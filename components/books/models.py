@@ -7,7 +7,7 @@ from components.users.models import User
 class BookBase(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_activate = models.BooleanField(default=False)
+    is_activate = models.BooleanField(default=True)
 
     class Meta:
         abstract = True
@@ -38,6 +38,7 @@ class Book(BookBase):
     paperback = models.IntegerField(default=1)
     language = models.IntegerField(choices=LANGUAGE_CHOICES, default=0)
     publisher = models.CharField(max_length=256, null=True, blank=True)
+    price = models.IntegerField(default=0)
 
     class Meta:
         db_table = 'book'

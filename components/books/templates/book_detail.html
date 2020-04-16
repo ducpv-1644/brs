@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %} Books {{ book.name }} {% endblock %}
 {% block page %} Book {{ book.name }}{% endblock %}
@@ -27,7 +28,7 @@
                     <h4>Book details</h4>
                     <div class="text-muted">
                         <p class="text-sm">Category
-                            {% for category in book.category.all %}
+                            {% for category in book.book_category.all %}
                                 <b class="d-block">{{ category.name }}</b>
                             {% endfor %}
                         </p>
@@ -45,7 +46,7 @@
                     <h4>Price</h4>
                     <div class="bg-gray py-2 px-3 mt-4">
                         <h2 class="mb-0">
-                            200.000 VND
+                            {{ book.price|intcomma }} VND
                         </h2>
                     </div>
 
@@ -60,11 +61,12 @@
                             {% else %}
                                 {% if status.status == 1 %}
                                     <button class="btn btn-primary" type="submit" data-toggle="modal"
-                                        data-target="#modal-bookmark">Reading
+                                            data-target="#modal-bookmark">Reading
                                         - page {{ status.page_reading }}</button>
                                 {% elif status.status == 2 %}
                                     <button class="btn btn-primary" type="submit" data-toggle="modal"
-                                        data-target="#modal-bookmark">Read</button>
+                                            data-target="#modal-bookmark">Read
+                                    </button>
                                 {% endif %}
                             {% endif %}
 
@@ -83,6 +85,12 @@
                                 {% endif %}
                             </form>
                         </div>
+                        {% if user.role == 1 %}
+                            <div class="btn btn-primary btn-lg btn-flat">
+                                <i class="fas fa-edit fa-lg mr-2"></i>
+                                <a class="btn btn-primary" href="{% url 'book:book-update' id=book.id %}">Edit book</a>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

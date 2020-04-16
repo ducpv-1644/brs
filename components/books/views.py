@@ -1,6 +1,7 @@
 from datetime import datetime
 from django.urls import reverse
 from django.shortcuts import render, get_object_or_404, redirect
+from django.core.paginator import Paginator
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.views import View
@@ -21,11 +22,16 @@ from .forms import (
 
 class BookListView(View):
     template_name = 'book_list.html'
+    paginate_by = 25
 
     @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
-        books_qs = Book.objects.all()
-        return render(request, self.template_name, {'books': books_qs})
+        books = Book.objects.filter(is_activate=True).order_by('-updated_at')
+        paginator = Paginator(books, self.paginate_by)
+
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        return render(request, self.template_name, {'books': page_obj})
 
 
 class BookDetailView(View):
@@ -99,17 +105,30 @@ class BookUpdateView(View):
     @method_decorator(admin_required)
     def get(self, request, *args, **kwargs):
         book_id = kwargs.get('id')
-        book_qs = get_object_or_404(Book, pk=book_id)
-        update_book_form = self.form_class(instance=book_qs)
-        return render(request, self.template_name, {'form': update_book_form, 'id': book_id})
+        categories = BookCategory.objects.all()
+        book = Book.objects.filter(id=book_id).first()
+        if not book:
+            return render(request, '404.html', {'message': 'Book not found'})
+        category_ids_selected = [item.id for item in book.book_category.all()]
+        context = {
+            'categories': categories,
+            'category_ids_selected': category_ids_selected,
+            'book': book,
+            'form': self.form_class
+        }
+        return render(request, self.template_name, context)
 
     @method_decorator(admin_required)
-    def put(self, request, *args, **kwargs):
-        update_book_form = self.form_class(request.PUT)
+    def post(self, request, *args, **kwargs):
+        book = get_object_or_404(Book, pk=kwargs.get('id'))
+        update_book_form = self.form_class(request.POST, instance=book)
         if update_book_form.is_valid():
+            book = Book.objects.filter(id=kwargs.get('id')).first()
+            if not book:
+                return render(request, '404.html', {'message': 'Book not found'})
             update_book_form.save()
 
-            return redirect(reverse('book-detail'))
+            return redirect(reverse('book:book-detail', kwargs={'id': kwargs.get('id')}))
 
 
 class BookDeleteView(View):
@@ -117,9 +136,8 @@ class BookDeleteView(View):
     @method_decorator(admin_required)
     def post(self, request, *args, **kwargs):
         book_id = kwargs.get('id')
-        book_qs = get_object_or_404(Book, pk=book_id)
-        book_qs.delete()
-        return redirect(reverse('book-list'))
+        Book.objects.filter(id=book_id).update(is_activate=False)
+        return redirect(reverse('book:book-list'))
 
 
 class BookMarkReadView(View):
@@ -241,14 +259,16 @@ class BookReviewCreateView(View):
             if book_review_qs:
                 book_messages_review = book_review_qs.messages
                 book_messages_review.append(
-                    [request.user.username, book_review_form.cleaned_data['message'], now.strftime("%m/%d/%Y, %H:%M:%S")]
+                    [request.user.username, book_review_form.cleaned_data['message'],
+                     now.strftime("%m/%d/%Y, %H:%M:%S")]
                 )
                 book_review_qs.messages = book_messages_review
                 book_review_qs.save()
             else:
                 BookReview.objects.create(
                     book=book,
-                    messages=[[request.user.username, book_review_form.cleaned_data['message'], now.strftime("%m/%d/%Y, %H:%M:%S")]]
+                    messages=[[request.user.username, book_review_form.cleaned_data['message'],
+                               now.strftime("%m/%d/%Y, %H:%M:%S")]]
                 )
 
             return redirect(reverse('book:book-detail', kwargs={'id': book_id}))

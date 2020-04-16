@@ -1,15 +1,132 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-<form action="{% url 'book:book-update' id=id %}" method="PUT">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" value="Send message">
-</form>
-</body>
-</html>
+{% block title %} Book edit {% endblock %}
+{% block page %}Book Edit Information{% endblock %}
+{% block link %}
+    <li class="breadcrumb-item">
+        <a href="{% url 'book:book-list' %}">Book</a>
+    </li>
+    <li class="breadcrumb-item active">
+        <a href="{% url 'book:book-update' id=book.id %}">{{ book.id }}</a>
+    </li>
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card card-info">
+                <div class="card-header">
+                    <h3 class="card-title">Edit Book Form</h3>
+                </div>
+                <!-- /.card-header -->
+                <!-- form start -->
+                <form class="form-horizontal" action="{% url 'book:book-update' id=book.id %}" method="POST">
+                    {% csrf_token %}
+                    <div class="card-body">
+                        <div class="form-group row">
+                            <label for="inputName" class="col-sm-2 col-form-label">Name</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="inputName" placeholder="Name" name="name"
+                                       value="{{ book.name }}" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="inputCategory" class="col-sm-2 col-form-label">Category</label>
+                            <div class="col-sm-4">
+                                <select id="inputCategory" class="form-control" name="book_category" multiple>
+                                    {% for category in categories %}
+                                        {% if category.id in category_ids_selected %}
+                                            <option value="{{ category.id }}" selected>{{ category.name }}</option>
+                                        {% else %}
+                                            <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="inputLanguage" class="col-sm-2 col-form-label">Language</label>
+                            <div class="col-sm-3">
+                                <select id="inputLanguage" class="custom-select" name="language">
+                                    <option value="0" {% if book.language == 0 %}selected{% endif %}>Vietnamese</option>
+                                    <option value="1" {% if book.language == 1 %}selected{% endif %}>Japanese</option>
+                                    <option value="2" {% if book.language == 2 %}selected{% endif %}>English</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="inputAuthor" class="col-sm-2 col-form-label">Author</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="inputAuthor" placeholder="Author"
+                                       name="author" value="{{ book.author }}" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="inputPublisher" class="col-sm-2 col-form-label">Publisher</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="inputPublisher" placeholder="Publisher"
+                                       name="publisher" value="{{ book.publisher }}" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="inputImage" class="col-sm-2 col-form-label">Image</label>
+                            <div class="col-sm-10">
+                                <input type="url" class="form-control" id="inputImage" placeholder="Image URL"
+                                       name="image" value="{{ book.image }}">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="inputPaperback" class="col-sm-2 col-form-label">Paperback</label>
+                            <div class="col-sm-2">
+                                <input type="number" class="form-control" id="inputPaperback" name="paperback"
+                                       value="{{ book.paperback }}">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="inputPrice" class="col-sm-2 col-form-label">Price(VND)</label>
+                            <div class="col-sm-2">
+                                <input type="number" class="form-control" id="inputPrice" name="price"
+                                       value="{{ book.price }}">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="inputDescription" class="col-sm-2 col-form-label">Description</label>
+                            <div class="col-sm-10">
+                                <textarea class="form-control" rows="5" placeholder="Enter ..." name="description"
+                                          required>{{ book.description }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.card-body -->
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-info">Submit</button>
+                        <button type="button" class="btn btn-danger float-right" data-toggle="modal"
+                                data-target="#modal-delete">Remove
+                        </button>
+                    </div>
+                    <!-- /.card-footer -->
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modal-delete" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Are you sure to delete this item?</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <form action="{% url 'book:book-delete' id=book.id %}" method="post">
+                    {% csrf_token %}
+                    <div class="modal-footer justify-content-between">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </div>
+                </form>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+{% endblock %}
