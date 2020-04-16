@@ -28,7 +28,7 @@ SECRET_KEY = '030#)q5@46k@%g7-uo4np7h_0o7x9m+ce59imgxy90%902&+*o'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -136,3 +136,10 @@ STATICFILES_DIRS = (
 
 # Settings Users
 AUTH_USER_MODEL = 'users.User'
+
+# Settings activity log
+MONGO_LOG = {
+    'NAME': os.getenv('MONGO_NAME'),
+    'HOST': os.getenv('MONGO_HOST'),
+    'PORT': os.getenv('MONGO_PORT')
+}

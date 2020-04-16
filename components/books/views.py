@@ -1,7 +1,6 @@
 from datetime import datetime
 from django.urls import reverse
 from django.db.models import Count
-from django.utils.http import urlencode
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.utils.decorators import method_decorator
@@ -21,6 +20,9 @@ from .forms import (
     BookRequestBuyForm, BookRequestBuyUpdateForm,
     BookReviewCreateForm, SearchBookForm
 )
+from utility.log_activity import ActivityLog
+
+logger = ActivityLog()
 
 
 class BookListView(View):
@@ -110,11 +112,11 @@ class BookSearchView(View):
             search_text = search_form.cleaned_data['q']
             books_qs = Book.objects.annotate(
                 search=SearchVector(
-                    'name', 'description', 'category__name'
+                    'name', 'description', 'book_category__name'
                 )
             ).filter(search=search_text).distinct('name')
 
-            return render(request, self.template_name, {'books': books_qs})
+            return render(request, self.template_name, {'books': books_qs, 'q': search_text})
 
 
 class BookCreateView(View):
@@ -198,10 +200,13 @@ class BookMarkReadView(View):
                 book_read_status_qs.page_reading = page_reading
                 book_read_status_qs.status = BookReadStatus.STATUS_CHOICES[2][0]
                 book_read_status_qs.save()
+                logger.log_activity(source_user=request.user, obj_target=book, activity=logger.READ)
             elif book_read_status_qs and page_reading < book.paperback:
                 book_read_status_qs.page_reading = page_reading
                 book_read_status_qs.status = BookReadStatus.STATUS_CHOICES[1][0]
                 book_read_status_qs.save()
+                logger.log_activity(source_user=request.user, obj_target=book,
+                                    activity=f'{logger.READING}-{page_reading}')
             elif not book_read_status_qs:
                 book_read_status_qs = BookReadStatus.objects.create(
                     book=book,
@@ -209,6 +214,9 @@ class BookMarkReadView(View):
                     page_reading=page_reading,
                 )
                 book_read_status_qs.user.add(request.user)
+                logger.log_activity(source_user=request.user, obj_target=book,
+                                    activity=f'{logger.READING}-{page_reading} page')
+
             return redirect(reverse('book:book-detail', kwargs={'id': kwargs.get('id')}))
 
 
@@ -236,6 +244,8 @@ class BookFavoriteView(View):
                 )
                 book_read_status_qs.user.add(request.user)
                 book_read_status_qs.save()
+            logger.log_activity(source_user=request.user, obj_target=book,
+                                activity=logger.FAVORITE_MSG if is_favorite else logger.UNFAVORITE_MSG)
             return redirect(reverse('book:book-detail', kwargs={'id': kwargs.get('id')}))
 
 
