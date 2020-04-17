@@ -84,7 +84,8 @@
             <div class="card">
                 <div class="card-header p-2">
                     <ul class="nav nav-pills">
-                        <li class="nav-item"><a class="nav-link active" href="#timeline" data-toggle="tab">Timeline</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="#timeline" data-toggle="tab">Timeline</a>
+                        </li>
                         {% if member.id == user.id or user.role == 1 %}
                             <li class="nav-item">
                             <a class="nav-link" href="#settings-profle" data-toggle="tab">Settings Profile</a>
@@ -114,19 +115,33 @@
                                             <i class="fas fa-user bg-info"></i>
                                         {% elif activity.obj_target == 'book' %}
                                             <i class="fa fa-book bg-info"></i>
+                                        {% elif activity.obj_target == 'comment' %}
+                                            <i class="fas fa-comments bg-yellow"></i>
                                         {% endif %}
                                         <div class="timeline-item">
                                             <span class="time"><i
                                                     class="far fa-clock"></i> {{ activity.create_at }} </span>
 
-                                            <h3 class="timeline-header border-0"><a
-                                                    href="{% url 'users:user-detail' id=activity.source_user_id %}">{{ activity.source_user }}</a> {{ activity.activity }}
-                                                <a href="{% if activity.obj_target == 'user' %}
+                                            {% if activity.obj_target == 'comment' %}
+                                                <h3 class="timeline-header">
+                                                    <a href="{% url 'users:user-detail' id=activity.source_user_id %}">{{ activity.source_user }}
+                                                    </a> {{ activity.activity }}
+                                                    <a href="{% url 'book:book-detail' id=activity.obj_target_id %}">{{ activity.obj_target_name }}</a>
+                                                </h3>
+                                                <div class="timeline-body">
+                                                    {{ activity.obj_target_content }}
+                                                </div>
+                                            {% else %}
+                                                <h3 class="timeline-header border-0">
+                                                    <a href="{% url 'users:user-detail' id=activity.source_user_id %}">{{ activity.source_user }}</a>
+                                                    {{ activity.activity }}
+                                                    <a href="{% if activity.obj_target == 'user' %}
                                                             {% url 'users:user-detail' id=activity.obj_target_id %}
                                                             {% elif activity.obj_target == 'book' %}
                                                             {% url 'book:book-detail' id=activity.obj_target_id %}
                                                         {% endif %}">{{ activity.obj_target_name }}</a>
-                                            </h3>
+                                                </h3>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 {% endfor %}

@@ -133,7 +133,7 @@
                         <form action="{% url 'book:book-review' id=id %}" method="post">
                             {% csrf_token %}
                             <textarea class="form-control form-control-sm" rows="3" placeholder="Type a comment"
-                                      name="message"></textarea>
+                                      name="message" maxlength="512"></textarea>
                             <br>
                             <button type="submit" class="btn btn-primary">Submit</button>
                         </form>

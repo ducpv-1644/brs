@@ -324,10 +324,11 @@ class BookReviewCreateView(View):
                 book_review_qs.messages = book_messages_review
                 book_review_qs.save()
             else:
-                BookReview.objects.create(
+                book_review_qs = BookReview.objects.create(
                     book=book,
                     messages=[[request.user.username, book_review_form.cleaned_data['message'],
                                now.strftime("%m/%d/%Y, %H:%M:%S")]]
                 )
-
+            logger.log_activity(source_user=request.user, obj_target=book_review_qs, activity=logger.COMMENT,
+                                option_content=book_review_form.cleaned_data['message'])
             return redirect(reverse('book:book-detail', kwargs={'id': book_id}))

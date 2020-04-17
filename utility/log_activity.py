@@ -4,7 +4,7 @@ from django.conf import settings
 import pymongo
 
 from components.users.models import User
-from components.books.models import Book
+from components.books.models import Book, BookReview
 
 
 class ActivityLog(object):
@@ -17,7 +17,7 @@ class ActivityLog(object):
     READ = 'have finished the book '
     FOLLOW = 'followed the user'
     UNFLLOW = 'unfollowed the user'
-    COMMENT = ''
+    COMMENT = 'commented on book'
 
     def __init__(self):
         self.host = settings.MONGO_LOG.get('HOST')
@@ -26,7 +26,7 @@ class ActivityLog(object):
         self.db = self.client[settings.MONGO_LOG.get('NAME')]
         self.book_col = self.db['activity']
 
-    def log_activity(self, source_user: User, obj_target, activity):
+    def log_activity(self, source_user: User, obj_target, activity, option_content=None):
         data = {
             'source_user': source_user.username,
             'source_user_id': source_user.id,
@@ -37,6 +37,12 @@ class ActivityLog(object):
             data.update({'obj_target_name': obj_target.name, 'obj_target_id': obj_target.id, 'obj_target': 'book'})
         if isinstance(obj_target, User):
             data.update({'obj_target_name': obj_target.username, 'obj_target_id': obj_target.id, 'obj_target': 'user'})
+        if isinstance(obj_target, BookReview):
+            data.update({
+                'obj_target_name': obj_target.book.name,
+                'obj_target_id': obj_target.book.id,
+                'obj_target': 'comment',
+                'obj_target_content': option_content})
         self.book_col.insert_one(data)
 
     def get_activity_log(self, user: User, limit: int):
