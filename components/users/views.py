@@ -16,6 +16,9 @@ from components.books.models import Book, BookRequestBuy
 
 from .models import User
 from .decorators import admin_required
+from utility.log_activity import ActivityLog
+
+logger = ActivityLog()
 
 
 class SignUpView(View):
@@ -105,13 +108,15 @@ class AccountUpdateView(View):
 
 class AccountDetailView(View):
     template_name = 'user_detail.html'
+    LIMIT_ACTIVITY = 10
 
     @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
         user = User.objects.filter(id=kwargs.get('id')).first()
+        activity_log = logger.get_activity_log(user=user, limit=10)
         if not user:
             return render(request, '404.html', {'message': 'User not found'})
-        return render(request, self.template_name, {'member': user})
+        return render(request, self.template_name, {'member': user, 'activities': activity_log})
 
 
 class AdminDashboardView(View):

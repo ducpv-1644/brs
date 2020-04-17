@@ -6,7 +6,7 @@ SUN* has many technical books that all employees can read. To manage and use the
 
 ### Prerequisites
 - OS: Linux/MacOS
-- Database: PostgreSQL
+- Database: PostgreSQL, MongoDb
 - Github
 
 ### Installing
