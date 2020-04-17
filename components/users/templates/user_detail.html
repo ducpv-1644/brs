@@ -18,7 +18,7 @@
             <div class="card card-primary card-outline">
                 <div class="card-body box-profile">
                     <div class="text-center">
-                        <img class="profile-user-img img-fluid img-circle" src="{% static 'img/user4-128x128.jpg' %}"
+                        <img class="profile-user-img img-fluid img-circle" src="{% static 'img/user2-160x160.jpg' %}"
                              alt="User profile picture">
                     </div>
 
@@ -28,17 +28,29 @@
 
                     <ul class="list-group list-group-unbordered mb-3">
                         <li class="list-group-item">
-                            <b>Followers</b> <a class="float-right">1,322</a>
+                            <b>Followers</b> <a class="float-right">{{ follower_count }}</a>
                         </li>
                         <li class="list-group-item">
-                            <b>Following</b> <a class="float-right">543</a>
+                            <b>Following</b> <a class="float-right">{{ following_count }}</a>
                         </li>
                         <li class="list-group-item">
                             <b>Friends</b> <a class="float-right">13,287</a>
                         </li>
                     </ul>
-
-                    <a href="#" class="btn btn-primary btn-block"><b>Follow</b></a>
+                    {% if user.id != member.id %}
+                        <form action="{% url 'users:user-follow' %}" method="POST">
+                            {% csrf_token %}
+                            {% if follow_status == 1 %}
+                                <input type="hidden" name="status" value="2">
+                                <input type="hidden" name="following_id" value="{{ member.id }}">
+                                <button type="submit" class="btn btn-primary btn-block"><b>Follow</b></button>
+                            {% else %}
+                                <input type="hidden" name="status" value="1">
+                                <input type="hidden" name="following_id" value="{{ member.id }}">
+                                <button type="submit" class="btn btn-primary btn-block"><b>Followed</b></button>
+                            {% endif %}
+                        </form>
+                    {% endif %}
                 </div>
                 <!-- /.card-body -->
             </div>

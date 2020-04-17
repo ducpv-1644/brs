@@ -2,8 +2,9 @@ import datetime
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, MaxValueValidator
 
-from .models import User
+from .models import User, UserFollow
 from utility.utility import verify_email_format
 
 
@@ -59,8 +60,12 @@ class ChangeRoleAccountForm(forms.Form):
     role = forms.ChoiceField(choices=User.USER_ROLES)
 
 
-class AccountUpdateForm(forms.ModelForm):
-
+class UserUpdateForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'education', 'location', 'skills', 'notes']
+
+
+class UserFollowForm(forms.Form):
+    following_id = forms.IntegerField()
+    status = forms.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(2)])

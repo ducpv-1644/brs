@@ -1,3 +1,4 @@
+from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
@@ -9,12 +10,12 @@ from django.views import View
 from .forms import (
     SignInForm, SignUpForm,
     ChangeRoleAccountForm,
-    AccountUpdateForm
+    UserUpdateForm, UserFollowForm
 )
 
 from components.books.models import Book, BookRequestBuy
 
-from .models import User
+from .models import User, UserFollow
 from .decorators import admin_required
 from utility.log_activity import ActivityLog
 
@@ -60,7 +61,7 @@ class SignOutView(View):
         return redirect(reverse('users:signin'))
 
 
-class ChangeRoleAccountView(View):
+class ChangeRoleUserView(View):
     template_name = 'change_user_role.html'
     form_class = ChangeRoleAccountForm
 
@@ -76,7 +77,7 @@ class ChangeRoleAccountView(View):
             return render(request, '404.html', {'message': f'User {user.username} not found'})
 
 
-class AccountListView(View):
+class UserListView(View):
     template_name = 'users_list.html'
 
     @method_decorator(login_required)
@@ -85,13 +86,16 @@ class AccountListView(View):
         return render(request, self.template_name, {'users': users})
 
 
-class AccountUpdateView(View):
-    form_class = AccountUpdateForm
+class UserUpdateView(View):
+    form_class = UserUpdateForm
 
     @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
-        user_update_form = AccountUpdateForm(request.POST)
+        user_update_form = UserUpdateForm(request.POST)
         if user_update_form.is_valid():
+            if request.user.id != kwargs.get('id') and request.user.role != 1:
+                return HttpResponseForbidden('403 Forbidden')
+
             user = User.objects.filter(id=kwargs.get('id')).first()
             if not user:
                 return render(request, '404.html', {'message': 'User not found'})
@@ -106,7 +110,7 @@ class AccountUpdateView(View):
             return redirect(reverse('users:user-detail', kwargs={'id': user.id}))
 
 
-class AccountDetailView(View):
+class UserDetailView(View):
     template_name = 'user_detail.html'
     LIMIT_ACTIVITY = 10
 
@@ -116,7 +120,19 @@ class AccountDetailView(View):
         activity_log = logger.get_activity_log(user=user, limit=10)
         if not user:
             return render(request, '404.html', {'message': 'User not found'})
-        return render(request, self.template_name, {'member': user, 'activities': activity_log})
+
+        follow_qs = UserFollow.objects.filter(follower=request.user, following=user).first()
+        follow_status = 1 if not follow_qs else follow_qs.status
+        following_count = UserFollow.objects.filter(follower=user, status=UserFollow.STATUS_FOLLOW[1][0]).count()
+        follower_count = UserFollow.objects.filter(following=user, status=UserFollow.STATUS_FOLLOW[1][0]).count()
+        context = {
+            'member': user,
+            'activities': activity_log,
+            'follow_status': follow_status,
+            'following_count': following_count,
+            'follower_count': follower_count
+        }
+        return render(request, self.template_name, context=context)
 
 
 class AdminDashboardView(View):
@@ -134,3 +150,23 @@ class AdminDashboardView(View):
 
         }
         return render(request, self.template_name, context=context)
+
+
+class UserFollowUpdateCreateView(View):
+    form_class = UserFollowForm
+
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        follow_form = self.form_class(request.POST)
+        if follow_form.is_valid():
+            follower = request.user
+            following = follow_form.cleaned_data['following_id']
+            status = follow_form.cleaned_data['status']
+            follow_qs = UserFollow.objects.filter(follower=follower, following__id=following).first()
+            if not follow_qs:
+                UserFollow.objects.create(follower=follower, following__=following, status=status)
+            else:
+                follow_qs.status = status
+                follow_qs.save()
+
+            return redirect(reverse('users:user-detail', kwargs={'id': following}))

@@ -8,7 +8,17 @@ def user_directory_path(instance, filename):
     # Uploaded to MEDIA_ROOT / user_<id>/<filename>
     return f'user_{instance.user.id}/avatar/{filename}'
 
-class User(AbstractBaseUser):
+
+class UserBase(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_activate = models.BooleanField(default=True)
+
+    class Meta:
+        abstract = True
+
+
+class User(AbstractBaseUser, UserBase):
     ROLE_ADMIN = 1
     ROLE_MEMBER = 2
     USER_ROLES = (
@@ -38,3 +48,20 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return 'User: {}'.format(self.username)
+
+
+class UserFollow(UserBase):
+    STATUS_FOLLOW = (
+        (1, 'unfollow'),
+        (2, 'follow')
+    )
+    follower = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE, null=True)
+    following = models.ForeignKey(User, related_name='followers', on_delete=models.CASCADE, null=True)
+    status = models.IntegerField(choices=STATUS_FOLLOW, default=1)
+
+    class Meta:
+        db_table = 'user_follow'
+        unique_together = ('follower', 'following')
+
+    def __str__(self):
+        return f'{self.follower.username} follows {self.following.username}'
