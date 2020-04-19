@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} Not found {% endblock %}
+
+{% block content %}
+    <div class="error-page">
+        <h2 class="headline text-danger">500</h2>
+
+        <div class="error-content">
+            <h3><i class="fas fa-exclamation-triangle text-danger"></i> Oops! Something went wrong.</h3>
+
+            <p>
+                We will work on fixing that right away.
+                Meanwhile, you may <a href="
+                    {% if user.role == 1 %}{% url 'users:dashboard' %}{% else %}{% url 'book:book-list' %}{% endif %}">return
+                to dashboard</a> or try using the search form.
+            </p>
+        </div>
+    </div>
+{% endblock %}

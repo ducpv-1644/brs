@@ -6,7 +6,7 @@ from django.db import models
 
 def user_directory_path(instance, filename):
     # Uploaded to MEDIA_ROOT / user_<id>/<filename>
-    return f'user_{instance.user.id}/avatar/{filename}'
+    return f'user_{instance.id}/avatar/{filename}'
 
 
 class UserBase(models.Model):

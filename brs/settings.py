@@ -143,3 +143,7 @@ MONGO_LOG = {
     'HOST': os.getenv('MONGO_HOST'),
     'PORT': os.getenv('MONGO_PORT')
 }
+
+# Settings media upload file
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

@@ -1,3 +1,4 @@
+from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.shortcuts import render, redirect
@@ -122,6 +123,8 @@ class UserUpdateView(UserDetailView):
             user.skills = user_update_form.cleaned_data['skills']
             user.notes = user_update_form.cleaned_data['notes']
             user.location = user_update_form.cleaned_data['location']
+            if request.FILES.get('avatar'):
+                user.avatar = request.FILES['avatar']
             user.save()
 
             return redirect(reverse('users:user-detail', kwargs={'id': user.id}))
