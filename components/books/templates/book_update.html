@@ -21,6 +21,20 @@
                 <!-- /.card-header -->
                 <!-- form start -->
                 <form class="form-horizontal" action="{% url 'book:book-update' id=book.id %}" method="POST">
+                    {% if form.errors %}
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <div class="alert alert-danger">
+                                    <strong>{{ field.name }} {{ error|slice:"4:" }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                <strong>{{ error|escape }}</strong>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
                     {% csrf_token %}
                     <div class="card-body">
                         <div class="form-group row">
@@ -129,4 +143,13 @@
         </div>
         <!-- /.modal-dialog -->
     </div>
+{% endblock %}
+{% block custom_js %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            {% if form.errors %}
+                toastr.error('Update book fail!');
+            {% endif %}
+        })
+    </script>
 {% endblock %}

@@ -126,6 +126,20 @@
                     </button>
                 </div>
                 <form action="{% url 'book:add-request-buy' %}" method="post">
+                    {% if form_to_buy_book.errors %}
+                        {% for field in form_to_buy_book %}
+                            {% for error in field.errors %}
+                                <div class="alert alert-danger">
+                                    <strong>{{ field.name }} {{ error|slice:"4:" }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form_to_buy_book.non_field_errors %}
+                            <div class="alert alert-danger">
+                                <strong>{{ error|escape }}</strong>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
                     {% csrf_token %}
                     <div class="modal-body">
                         <div class="form-group">
@@ -173,6 +187,20 @@
                         </button>
                     </div>
                     <form method="post" id="modal-approve-request-form">
+                        {% if form_update_request.errors %}
+                            {% for field in form_update_request %}
+                                {% for error in field.errors %}
+                                    <div class="alert alert-danger">
+                                        <strong>{{ field.name }} {{ error|slice:"4:" }}</strong>
+                                    </div>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form_update_request.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    <strong>{{ error|escape }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
                         {% csrf_token %}
                         <input type="number" class="form-control" id="inputStatus" value=2 name="status" hidden>
                         <div class="modal-footer justify-content-between">
@@ -194,6 +222,20 @@
                         </button>
                     </div>
                     <form method="post" id="modal-reject-request-form">
+                        {% if form_update_request.errors %}
+                            {% for field in form_update_request %}
+                                {% for error in field.errors %}
+                                    <div class="alert alert-danger">
+                                        <strong>{{ field.name }} {{ error|slice:"4:" }}</strong>
+                                    </div>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form_update_request.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    <strong>{{ error|escape }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
                         {% csrf_token %}
                         <input type="number" class="form-control" id="inputStatus" value=4 name="status" hidden>
                         <div class="modal-footer justify-content-between">
@@ -217,5 +259,16 @@
             var requestBuyToBookId = $(this).data('id');
             $("#modal-reject-request-form").attr('action', `/book/edit-request-buy/${requestBuyToBookId}`);
         });
+    </script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            {% if form_to_buy_book.errors %}
+                toastr.error('Create request to buy book fail!');
+            {% endif %}
+
+            {% if form_update_request.errors %}
+                toastr.error('Approve/Reject request to buy book have a error!');
+            {% endif %}
+        })
     </script>
 {% endblock %}

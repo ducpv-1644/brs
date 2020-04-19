@@ -77,6 +77,20 @@
                         </div>
                         <div class="btn btn-primary btn-lg btn-flat">
                             <form action="{% url 'book:book-like' id=book.id %}" method="post">
+                                {% if form_favorite.errors %}
+                                    {% for field in form_favorite %}
+                                        {% for error in field.errors %}
+                                            <div class="alert alert-danger">
+                                                <strong>{{ field.name }} {{ error|slice:"4:" }}</strong>
+                                            </div>
+                                        {% endfor %}
+                                    {% endfor %}
+                                    {% for error in form_favorite.non_field_errors %}
+                                        <div class="alert alert-danger">
+                                            <strong>{{ error|escape }}</strong>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
                                 {% csrf_token %}
                                 {% if status.is_favorite == True %}
                                     <input type="hidden" name="is_favorite" value=0 hidden>
@@ -131,6 +145,20 @@
                             </div>
                         {% endfor %}
                         <form action="{% url 'book:book-review' id=id %}" method="post">
+                            {% if form_comment.errors %}
+                                {% for field in form_comment %}
+                                    {% for error in field.errors %}
+                                        <div class="alert alert-danger">
+                                            <strong>{{ field.name }} {{ error|slice:"4:" }}</strong>
+                                        </div>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form_comment.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        <strong>{{ error|escape }}</strong>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
                             {% csrf_token %}
                             <textarea class="form-control form-control-sm" rows="3" placeholder="Type a comment"
                                       name="message" maxlength="512"></textarea>
@@ -154,6 +182,20 @@
                 </div>
                 <form action="{% url 'book:book-mark' id=book.id %}" method="post">
                     <div class="modal-body">
+                        {% if form_bookmark.errors %}
+                            {% for field in form_bookmark %}
+                                {% for error in field.errors %}
+                                    <div class="alert alert-danger">
+                                        <strong>{{ field.name }} {{ error|slice:"4:" }}</strong>
+                                    </div>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form_bookmark.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    <strong>{{ error|escape }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
                         {% csrf_token %}
                         <input type="number" class="form-control" id="inputName"
                                placeholder="Bookmark" name="page_reading" required min=1>
@@ -168,4 +210,17 @@
         </div>
         <!-- /.modal-dialog -->
     </div>
+{% endblock %}
+{% block custom_js %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            {% if form_bookmark.errors %}
+                toastr.error('Bookmark a book fail!');
+            {% elif form_comment.errors %}
+                toastr.error('Comment a book fail!');
+            {% elif form_favorite.errors %}
+                toastr.error('Like a book fail!');
+            {% endif %}
+        })
+    </script>
 {% endblock %}

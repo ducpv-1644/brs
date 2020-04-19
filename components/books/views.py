@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.views import View
 from django.contrib.postgres.search import SearchVector
 from django.db.models.query import Q
+from django.contrib import messages
 
 from components.users.decorators import admin_required
 from .models import (
@@ -87,7 +88,10 @@ class BookDetailView(View):
             'id': book_id,
             'book': book,
             'status': book_read_status_qs,
-            'reviews': book_reviews_qs.messages if book_reviews_qs else []
+            'reviews': book_reviews_qs.messages if book_reviews_qs else [],
+            'form_comment': kwargs.get('form_comment'),
+            'form_bookmark': kwargs.get('form_bookmark'),
+            'form_favorite': kwargs.get('form_favorite'),
         }
         return render(request, self.template_name, context)
 
@@ -97,7 +101,6 @@ class BookCategoryView(View):
 
     def get(self, request, *args, **kwargs):
         book_categories = BookCategory.objects.annotate(num_book=Count('book')).order_by('name')
-
         return render(request, self.template_name, {'categories': list(book_categories)})
 
 
@@ -115,8 +118,8 @@ class BookSearchView(View):
                     'name', 'description', 'book_category__name'
                 )
             ).filter(search=search_text).distinct('name')
-
             return render(request, self.template_name, {'books': books_qs, 'q': search_text})
+        return redirect(reverse('book:book-list'))
 
 
 class BookCreateView(View):
@@ -138,6 +141,7 @@ class BookCreateView(View):
         if create_book_form.is_valid():
             item = create_book_form.save()
             return redirect(reverse('book:book-detail', kwargs={'id': item.id}))
+        return render(request, self.template_name, {'form': create_book_form})
 
 
 class BookUpdateView(View):
@@ -169,8 +173,9 @@ class BookUpdateView(View):
             if not book:
                 return render(request, '404.html', {'message': 'Book not found'})
             update_book_form.save()
-
+            messages.success(request, 'Update book success!')
             return redirect(reverse('book:book-detail', kwargs={'id': kwargs.get('id')}))
+        return render(request, self.template_name, {'form': update_book_form})
 
 
 class BookDeleteView(View):
@@ -182,7 +187,7 @@ class BookDeleteView(View):
         return redirect(reverse('book:book-list'))
 
 
-class BookMarkReadView(View):
+class BookMarkReadView(BookDetailView):
     form_class = BookMarkReadForm
 
     @method_decorator(login_required)
@@ -218,9 +223,12 @@ class BookMarkReadView(View):
                                     activity=f'{logger.READING}-{page_reading} page')
 
             return redirect(reverse('book:book-detail', kwargs={'id': kwargs.get('id')}))
+        kwargs.update({'form_bookmark': mark_read_form})
+        response = self.get(request, **kwargs)
+        return response
 
 
-class BookFavoriteView(View):
+class BookFavoriteView(BookDetailView):
     form_class = BookFavoriteForm
 
     @method_decorator(login_required)
@@ -247,62 +255,12 @@ class BookFavoriteView(View):
             logger.log_activity(source_user=request.user, obj_target=book,
                                 activity=logger.FAVORITE_MSG if is_favorite else logger.UNFAVORITE_MSG)
             return redirect(reverse('book:book-detail', kwargs={'id': kwargs.get('id')}))
+        kwargs.update({'form_favorite': favorite_form})
+        response = self.get(request, **kwargs)
+        return response
 
 
-class BookRequestBuyCreateView(View):
-    template_name = 'book_create_request_buy.html'
-    form_class = BookRequestBuyForm
-
-    @method_decorator(login_required)
-    def post(self, request, *args, **kwargs):
-        book_request_buy_form = self.form_class(request.POST)
-        if book_request_buy_form.is_valid():
-            request_book = BookRequestBuy.objects.create(
-                book_url=book_request_buy_form.cleaned_data['book_url'],
-                name=book_request_buy_form.cleaned_data['name'],
-                price=book_request_buy_form.cleaned_data['price'],
-                user=request.user
-            )
-            request_book.book_category.set(book_request_buy_form.cleaned_data['book_category'])
-            request_book.save()
-
-            return redirect(reverse('book:list-request-buy'))
-
-
-class BookRequestBuyUpdateView(View):
-    form_class = BookRequestBuyUpdateForm
-
-    @method_decorator(admin_required)
-    def post(self, request, *args, **kwargs):
-        book_request_buy_id = kwargs.get('id')
-        book_request_buy_update_form = self.form_class(request.POST)
-        if book_request_buy_update_form.is_valid():
-            book_request_buy_qs = BookRequestBuy.objects.filter(id=book_request_buy_id).first()
-            if not book_request_buy_qs:
-                return render(request, '404.html', {'message': 'Request book not found'})
-            book_request_buy_qs.status = book_request_buy_update_form.cleaned_data['status']
-            book_request_buy_qs.save()
-
-            return redirect(reverse('book:list-request-buy'))
-
-
-class BookRequestBuyListView(View):
-    template_name = 'book_list_request_buy.html'
-    paginate_by = 25
-
-    @method_decorator(login_required)
-    def get(self, request, *args, **kwargs):
-        books_requests_buy_qs = BookRequestBuy.objects.filter(is_activate=True).order_by('-updated_at')
-        categories = BookCategory.objects.all()
-
-        paginator = Paginator(books_requests_buy_qs, self.paginate_by)
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
-        return render(request, self.template_name,
-                      {'books_requests_buy': page_obj, 'categories': categories})
-
-
-class BookReviewCreateView(View):
+class BookReviewCreateView(BookDetailView):
     form_class = BookReviewCreateForm
 
     @method_decorator(login_required)
@@ -332,3 +290,70 @@ class BookReviewCreateView(View):
             logger.log_activity(source_user=request.user, obj_target=book_review_qs, activity=logger.COMMENT,
                                 option_content=book_review_form.cleaned_data['message'])
             return redirect(reverse('book:book-detail', kwargs={'id': book_id}))
+        kwargs.update({'form_comment': book_review_form})
+        response = self.get(request, **kwargs)
+        return response
+
+
+class BookRequestBuyListView(View):
+    template_name = 'book_list_request_buy.html'
+    paginate_by = 25
+
+    @method_decorator(login_required)
+    def get(self, request, *args, **kwargs):
+        books_requests_buy_qs = BookRequestBuy.objects.filter(is_activate=True).order_by('-updated_at')
+        categories = BookCategory.objects.all()
+
+        paginator = Paginator(books_requests_buy_qs, self.paginate_by)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        context = {
+            'form_to_buy_book': kwargs.get('form_to_buy_book'),
+            'form_update_request': kwargs.get('form_update_request'),
+            'books_requests_buy': page_obj,
+            'categories': categories
+        }
+        return render(request, self.template_name, context)
+
+
+class BookRequestBuyCreateView(BookRequestBuyListView):
+    template_name = 'book_create_request_buy.html'
+    form_class = BookRequestBuyForm
+
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        book_request_buy_form = self.form_class(request.POST)
+        if book_request_buy_form.is_valid():
+            request_book = BookRequestBuy.objects.create(
+                book_url=book_request_buy_form.cleaned_data['book_url'],
+                name=book_request_buy_form.cleaned_data['name'],
+                price=book_request_buy_form.cleaned_data['price'],
+                user=request.user
+            )
+            request_book.book_category.set(book_request_buy_form.cleaned_data['book_category'])
+            request_book.save()
+
+            return redirect(reverse('book:list-request-buy'))
+        kwargs.update({'form_to_buy_book': book_request_buy_form})
+        response = self.get(request, **kwargs)
+        return response
+
+
+class BookRequestBuyUpdateView(BookRequestBuyListView):
+    form_class = BookRequestBuyUpdateForm
+
+    @method_decorator(admin_required)
+    def post(self, request, *args, **kwargs):
+        book_request_buy_id = kwargs.get('id')
+        book_request_buy_update_form = self.form_class(request.POST)
+        if book_request_buy_update_form.is_valid():
+            book_request_buy_qs = BookRequestBuy.objects.filter(id=book_request_buy_id).first()
+            if not book_request_buy_qs:
+                return render(request, '404.html', {'message': 'Request book not found'})
+            book_request_buy_qs.status = book_request_buy_update_form.cleaned_data['status']
+            book_request_buy_qs.save()
+
+            return redirect(reverse('book:list-request-buy'))
+        kwargs.update({'form_update_request': book_request_buy_update_form})
+        response = self.get(request, **kwargs)
+        return response

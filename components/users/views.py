@@ -1,6 +1,3 @@
-import json
-
-from django.contrib.messages import get_messages
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.shortcuts import render, redirect
@@ -100,7 +97,8 @@ class UserDetailView(View):
             'following_count': following_count,
             'follower_count': follower_count,
             'form_role': kwargs.get('form_role'),
-            'form_profile': kwargs.get('form_profile')
+            'form_profile': kwargs.get('form_profile'),
+            'form_follow': kwargs.get('form_follow')
         }
         return render(request, self.template_name, context=context)
 
@@ -131,6 +129,7 @@ class UserUpdateView(UserDetailView):
         response = self.get(request, *kwargs)
         return response
 
+
 class ChangeRoleUserView(UserDetailView):
     form_class = ChangeRoleAccountForm
 
@@ -151,24 +150,7 @@ class ChangeRoleUserView(UserDetailView):
         return response
 
 
-class AdminDashboardView(View):
-    template_name = 'dashboard.html'
-
-    @method_decorator(admin_required)
-    def get(self, request, *args, **kwargs):
-        users_count = User.objects.all().count()
-        books_count = Book.objects.all().count()
-        books_request_buy_count = BookRequestBuy.objects.filter(status=BookRequestBuy.STATUS_CHOICES[0][0]).count()
-        context = {
-            'users_count': users_count,
-            'books_count': books_count,
-            'books_request_buy_count': books_request_buy_count
-
-        }
-        return render(request, self.template_name, context=context)
-
-
-class UserFollowUpdateCreateView(View):
+class UserFollowUpdateCreateView(UserDetailView):
     form_class = UserFollowForm
 
     @method_decorator(login_required)
@@ -186,3 +168,23 @@ class UserFollowUpdateCreateView(View):
                 follow_qs.save()
 
             return redirect(reverse('users:user-detail', kwargs={'id': following}))
+        kwargs.update({'form_follow': follow_form})
+        response = self.get(request, **kwargs)
+        return response
+
+
+class AdminDashboardView(View):
+    template_name = 'dashboard.html'
+
+    @method_decorator(admin_required)
+    def get(self, request, *args, **kwargs):
+        users_count = User.objects.all().count()
+        books_count = Book.objects.all().count()
+        books_request_buy_count = BookRequestBuy.objects.filter(status=BookRequestBuy.STATUS_CHOICES[0][0]).count()
+        context = {
+            'users_count': users_count,
+            'books_count': books_count,
+            'books_request_buy_count': books_request_buy_count
+
+        }
+        return render(request, self.template_name, context=context)

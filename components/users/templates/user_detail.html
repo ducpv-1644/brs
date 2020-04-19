@@ -10,13 +10,9 @@
         <a href="{% url 'users:user-detail' id=member.id %}">{{ member.username }}</a>
     </li>
 {% endblock %}
-{% block custom_css %}
-    <link rel="stylesheet" href="{% static 'plugins/toastr/toastr.min.css' %}">
-{% endblock %}
 {% block content %}
     <div class="row">
         <div class="col-md-3">
-            {#            {% include './includes/show_messages.html' %}#}
             <!-- Profile Image -->
             <div class="card card-primary card-outline">
                 <div class="card-body box-profile">
@@ -291,11 +287,14 @@
     </div>
 {% endblock %}
 {% block custom_js %}
-    <script src="{% static 'plugins/toastr/toastr.min.js' %}"></script>
     <script type="text/javascript">
         $(document).ready(function () {
             {% if form_role.errors %}
                 toastr.error('Change role user fail!');
+            {% endif %}
+
+            {% if form_profile.errors %}
+                toastr.error('Change profile user fail!');
             {% endif %}
         })
     </script>
