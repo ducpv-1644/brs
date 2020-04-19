@@ -3,8 +3,9 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.contrib.auth import authenticate
 
-from .models import User, UserFollow
+from .models import User
 from utility.utility import verify_email_format
 
 
@@ -31,8 +32,8 @@ class SignUpForm(UserCreationForm):
         return True
 
     def clean(self):
-        password1 = self.cleaned_data['password1']
-        password2 = self.cleaned_data['password2']
+        password1 = self.cleaned_data.get('password1')
+        password2 = self.cleaned_data.get('password2')
         if password1 != password2:
             raise ValidationError("Password and confirm password not match")
 
@@ -54,10 +55,18 @@ class SignInForm(forms.Form):
     email = forms.CharField(min_length=1, max_length=150)
     password = forms.CharField(min_length=1, max_length=128)
 
+    def clean(self):
+        cleaned_data = super().clean()
+        user = authenticate(username=cleaned_data.get('email'),
+                            password=cleaned_data.get('password'))
+        msg = 'Email and password not matching!'
+        if not user:
+            raise ValidationError(msg)
+
 
 class ChangeRoleAccountForm(forms.Form):
-    username = forms.CharField(min_length=1, max_length=150)
-    role = forms.ChoiceField(choices=User.USER_ROLES)
+    username = forms.CharField(max_length=150)
+    role = forms.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(2)])
 
 
 class UserUpdateForm(forms.ModelForm):

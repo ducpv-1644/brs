@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>SignIn</title>
     <link rel="stylesheet" href="{% static 'css/adminlte.css' %}">
+    <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
 </head>
 <body class="register-page">
 <div class="register-box">
@@ -17,6 +18,20 @@
             <p class="login-box-msg">Register a new membership</p>
 
             <form action="{% url 'users:signup' %}" method="post">
+                {% if form.errors %}
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <div class="alert alert-danger">
+                                <strong>{{ error|escape }}</strong>
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endif %}
                 {% csrf_token %}
                 <div class="input-group mb-3">
                     <input type="email" class="form-control" placeholder="Email" name="email" required>
@@ -35,10 +50,18 @@
 
                     </div>
                     <ul>
-                        <li><small>Your password can’t be too similar to your other personal information.</small></li>
-                        <li><small>Your password must contain at least 8 characters.</small></li>
-                        <li><small>Your password can’t be a commonly used password.</small></li>
-                        <li><small>Your password can’t be entirely numeric.</small></li>
+                        <li>
+                            <small>Your password can’t be too similar to your other personal information.</small>
+                        </li>
+                        <li>
+                            <small>Your password must contain at least 8 characters.</small>
+                        </li>
+                        <li>
+                            <small>Your password can’t be a commonly used password.</small>
+                        </li>
+                        <li>
+                            <small>Your password can’t be entirely numeric.</small>
+                        </li>
                     </ul>
                 </div>
                 <div class="input-group mb-3">

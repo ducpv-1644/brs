@@ -19,7 +19,7 @@ urlpatterns = [
     path('signin', SignInView.as_view(), name='signin'),
     path('signout', SignOutView.as_view(), name='signout'),
 
-    path('user/change-role/', ChangeRoleUserView.as_view(), name='change-role'),
+    path('user/<int:id>/change-role/', ChangeRoleUserView.as_view(), name='change-role'),
     path('users/', UserListView.as_view(), name='users-list'),
     path('user/<int:id>/edit/', UserUpdateView.as_view(), name='user-update'),
     path('user/<int:id>/', UserDetailView.as_view(), name='user-detail'),

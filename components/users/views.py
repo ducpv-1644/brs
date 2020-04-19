@@ -1,3 +1,6 @@
+import json
+
+from django.contrib.messages import get_messages
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.shortcuts import render, redirect
@@ -5,6 +8,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.contrib import messages
 from django.views import View
 
 from .forms import (
@@ -35,6 +39,7 @@ class SignUpView(View):
             login(request, user)
 
             return redirect(reverse('book:book-list'))
+        return render(request, self.template_name, {'form': signup_form})
 
 
 class SignInView(View):
@@ -50,8 +55,11 @@ class SignInView(View):
             user = authenticate(username=signin_form.cleaned_data['email'],
                                 password=signin_form.cleaned_data['password'])
             login(request, user)
-            return redirect(reverse('book:book-list'))
-        return render(request, self.template_name, {'form': self.form_class})
+            if user and user.role == 2:
+                return redirect(reverse('book:book-list'))
+            elif user and user.role == 1:
+                return redirect(reverse('users:dashboard'))
+        return render(request, self.template_name, {'form': signin_form})
 
 
 class SignOutView(View):
@@ -61,22 +69,6 @@ class SignOutView(View):
         return redirect(reverse('users:signin'))
 
 
-class ChangeRoleUserView(View):
-    template_name = 'change_user_role.html'
-    form_class = ChangeRoleAccountForm
-
-    @method_decorator(admin_required)
-    def post(self, request, *args, **kwargs):
-        change_role_account_form = ChangeRoleAccountForm(request.POST)
-        if change_role_account_form.is_valid():
-            user = User.objects.filter(username=change_role_account_form.cleaned_data['username']).first()
-            if user:
-                user.role = int(change_role_account_form.cleaned_data['role'])
-                user.save()
-                return redirect(reverse('users:users-list'))
-            return render(request, '404.html', {'message': f'User {user.username} not found'})
-
-
 class UserListView(View):
     template_name = 'users_list.html'
 
@@ -84,30 +76,6 @@ class UserListView(View):
     def get(self, request, *args, **kwargs):
         users = User.objects.filter(is_activate=True)
         return render(request, self.template_name, {'users': users})
-
-
-class UserUpdateView(View):
-    form_class = UserUpdateForm
-
-    @method_decorator(login_required)
-    def post(self, request, *args, **kwargs):
-        user_update_form = UserUpdateForm(request.POST)
-        if user_update_form.is_valid():
-            if request.user.id != kwargs.get('id') and request.user.role != 1:
-                return HttpResponseForbidden('403 Forbidden')
-
-            user = User.objects.filter(id=kwargs.get('id')).first()
-            if not user:
-                return render(request, '404.html', {'message': 'User not found'})
-            user.username = user_update_form.cleaned_data['username']
-            user.email = user_update_form.cleaned_data['username']
-            user.education = user_update_form.cleaned_data['education']
-            user.skills = user_update_form.cleaned_data['skills']
-            user.notes = user_update_form.cleaned_data['notes']
-            user.location = user_update_form.cleaned_data['location']
-            user.save()
-
-            return redirect(reverse('users:user-detail', kwargs={'id': user.id}))
 
 
 class UserDetailView(View):
@@ -130,9 +98,57 @@ class UserDetailView(View):
             'activities': activity_log,
             'follow_status': follow_status,
             'following_count': following_count,
-            'follower_count': follower_count
+            'follower_count': follower_count,
+            'form_role': kwargs.get('form_role'),
+            'form_profile': kwargs.get('form_profile')
         }
         return render(request, self.template_name, context=context)
+
+
+class UserUpdateView(UserDetailView):
+    form_class = UserUpdateForm
+
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        user_update_form = UserUpdateForm(request.POST)
+        if user_update_form.is_valid():
+            if request.user.id != kwargs.get('id') and request.user.role != 1:
+                return HttpResponseForbidden('403 Forbidden')
+
+            user = User.objects.filter(id=kwargs.get('id')).first()
+            if not user:
+                return render(request, '404.html', {'message': 'User not found'})
+            user.username = user_update_form.cleaned_data['username']
+            user.email = user_update_form.cleaned_data['username']
+            user.education = user_update_form.cleaned_data['education']
+            user.skills = user_update_form.cleaned_data['skills']
+            user.notes = user_update_form.cleaned_data['notes']
+            user.location = user_update_form.cleaned_data['location']
+            user.save()
+
+            return redirect(reverse('users:user-detail', kwargs={'id': user.id}))
+        kwargs.update({'form_profile': user_update_form})
+        response = self.get(request, *kwargs)
+        return response
+
+class ChangeRoleUserView(UserDetailView):
+    form_class = ChangeRoleAccountForm
+
+    @method_decorator(admin_required)
+    def post(self, request, *args, **kwargs):
+        change_role_account_form = ChangeRoleAccountForm(request.POST)
+        if change_role_account_form.is_valid():
+            username = change_role_account_form.cleaned_data['username']
+            user = User.objects.filter(username=username).first()
+            if user:
+                user.role = int(change_role_account_form.cleaned_data['role'])
+                user.save()
+                return redirect(reverse('users:user-detail', kwargs={'id': user.id}))
+            return render(request, '404.html', {'message': f'User {user.username} not found'})
+
+        kwargs.update({'form_role': change_role_account_form})
+        response = self.get(request, **kwargs)
+        return response
 
 
 class AdminDashboardView(View):

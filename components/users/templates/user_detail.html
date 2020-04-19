@@ -10,10 +10,13 @@
         <a href="{% url 'users:user-detail' id=member.id %}">{{ member.username }}</a>
     </li>
 {% endblock %}
+{% block custom_css %}
+    <link rel="stylesheet" href="{% static 'plugins/toastr/toastr.min.css' %}">
+{% endblock %}
 {% block content %}
     <div class="row">
         <div class="col-md-3">
-
+            {#            {% include './includes/show_messages.html' %}#}
             <!-- Profile Image -->
             <div class="card card-primary card-outline">
                 <div class="card-body box-profile">
@@ -100,7 +103,7 @@
                         </li>
                         {% if member.id == user.id or user.role == 1 %}
                             <li class="nav-item">
-                            <a class="nav-link" href="#settings-profle" data-toggle="tab">Settings Profile</a>
+                            <a class="nav-link" href="#settings-profile" data-toggle="tab">Settings Profile</a>
                         {% endif %}
 
                         {% if user.role == 1 %}
@@ -167,9 +170,23 @@
                         </div>
                         <!-- /.tab-pane -->
 
-                        <div class="tab-pane" id="settings-profle">
+                        <div class="tab-pane" id="settings-profile">
                             <form class="form-horizontal" action="{% url 'users:user-update' id=member.id %}"
                                   method="POST">
+                                {% if form_profile.errors %}
+                                    {% for field in form_profile %}
+                                        {% for error in field.errors %}
+                                            <div class="alert alert-danger">
+                                                <strong>{{ field.name }} {{ error|slice:"4:" }}</strong>
+                                            </div>
+                                        {% endfor %}
+                                    {% endfor %}
+                                    {% for error in form_profile.non_field_errors %}
+                                        <div class="alert alert-danger">
+                                            <strong>{{ error|escape }}</strong>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
                                 {% csrf_token %}
                                 <div class="form-group row">
                                     <label for="inputUserName" class="col-sm-2 col-form-label">Username/Email</label>
@@ -217,7 +234,22 @@
 
                         {% if user.role == 1 %}
                             <div class="tab-pane" id="settings-role">
-                                <form class="form-horizontal" action="{% url 'users:change-role' %}" method="POST">
+                                <form class="form-horizontal" action="{% url 'users:change-role' id=member.id %}"
+                                      method="POST">
+                                    {% if form_role.errors %}
+                                        {% for field in form_role %}
+                                            {% for error in field.errors %}
+                                                <div class="alert alert-danger">
+                                                    <strong>{{ field.name }} {{ error|slice:"4:" }}</strong>
+                                                </div>
+                                            {% endfor %}
+                                        {% endfor %}
+                                        {% for error in form_role.non_field_errors %}
+                                            <div class="alert alert-danger">
+                                                <strong>{{ error|escape }}</strong>
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
                                     {% csrf_token %}
                                     <div class="form-group row">
                                         <label for="inputUserName" class="col-sm-2 col-form-label">Username</label>
@@ -257,4 +289,14 @@
         </div>
         <!-- /.col -->
     </div>
+{% endblock %}
+{% block custom_js %}
+    <script src="{% static 'plugins/toastr/toastr.min.js' %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            {% if form_role.errors %}
+                toastr.error('Change role user fail!');
+            {% endif %}
+        })
+    </script>
 {% endblock %}
