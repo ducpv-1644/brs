@@ -1,5 +1,6 @@
 from django.core.files.storage import FileSystemStorage
 from django.core.paginator import Paginator
+from django.db.models import Count
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.shortcuts import render, redirect
@@ -16,7 +17,7 @@ from .forms import (
     UserUpdateForm, UserFollowForm
 )
 
-from components.books.models import Book, BookRequestBuy
+from components.books.models import Book, BookRequestBuy, BookReadStatus
 
 from .models import User, UserFollow
 from .decorators import admin_required
@@ -185,10 +186,27 @@ class AdminDashboardView(View):
         users_count = User.objects.all().count()
         books_count = Book.objects.all().count()
         books_request_buy_count = BookRequestBuy.objects.filter(status=BookRequestBuy.STATUS_CHOICES[0][0]).count()
+        most_read_books = BookReadStatus.objects.filter(status__in=[1, 2]).values('book__id',
+                                                                                  'book__name',
+                                                                                  'book__author').annotate(
+            total=Count('book')).order_by('-total')[:5]
+        most_followed_users = UserFollow.objects.filter(status=2).values('following__id',
+                                                                         'following__username',
+                                                                         'following__role').annotate(
+            total=Count('following')).order_by('-total')[:5]
+        most_read_book_members = BookReadStatus.objects.filter(status__in=[1, 2]).values('user__id',
+                                                                                         'user__username',
+                                                                                         'user__role').annotate(
+            total=Count('user')).order_by('-total')[:5]
+        users_login = User.objects.filter(is_activate=True).order_by('-last_login')
         context = {
             'users_count': users_count,
             'books_count': books_count,
-            'books_request_buy_count': books_request_buy_count
+            'books_request_buy_count': books_request_buy_count,
+            'most_read_books': most_read_books,
+            'most_followed_users': most_followed_users,
+            'most_read_book_members': most_read_book_members,
+            'users_login': users_login
 
         }
         return render(request, self.template_name, context=context)

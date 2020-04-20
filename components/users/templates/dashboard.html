@@ -91,86 +91,24 @@
                     <table class="table table-striped table-valign-middle">
                         <thead>
                         <tr>
-                            <th>Product</th>
-                            <th>Price</th>
-                            <th>Sales</th>
-                            <th>More</th>
+                            <th>#</th>
+                            <th>Book</th>
+                            <th>Author</th>
+                            <th>Total(book)</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td>
-                                Some Product
-                            </td>
-                            <td>$13 USD</td>
-                            <td>
-                                <small class="text-success mr-1">
-                                    <i class="fas fa-arrow-up"></i>
-                                    12%
-                                </small>
-                                12,000 Sold
-                            </td>
-                            <td>
-                                <a href="#" class="text-muted">
-                                    <i class="fas fa-search"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Another Product
-                            </td>
-                            <td>$29 USD</td>
-                            <td>
-                                <small class="text-warning mr-1">
-                                    <i class="fas fa-arrow-down"></i>
-                                    0.5%
-                                </small>
-                                123,234 Sold
-                            </td>
-                            <td>
-                                <a href="#" class="text-muted">
-                                    <i class="fas fa-search"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Amazing Product
-                            </td>
-                            <td>$1,230 USD</td>
-                            <td>
-                                <small class="text-danger mr-1">
-                                    <i class="fas fa-arrow-down"></i>
-                                    3%
-                                </small>
-                                198 Sold
-                            </td>
-                            <td>
-                                <a href="#" class="text-muted">
-                                    <i class="fas fa-search"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Perfect Item
-                                <span class="badge bg-danger">NEW</span>
-                            </td>
-                            <td>$199 USD</td>
-                            <td>
-                                <small class="text-success mr-1">
-                                    <i class="fas fa-arrow-up"></i>
-                                    63%
-                                </small>
-                                87 Sold
-                            </td>
-                            <td>
-                                <a href="#" class="text-muted">
-                                    <i class="fas fa-search"></i>
-                                </a>
-                            </td>
-                        </tr>
+
+                        {% for item in most_read_books %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td><a href="{% url 'book:book-detail' id=item.book__id %}">{{ item.book__name }}</a>
+                                </td>
+                                <td><p>{{ item.book__author }}</p>
+                                </td>
+                                <td>{{ item.total }}</td>
+                            </tr>
+                        {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -193,86 +131,24 @@
                     <table class="table table-striped table-valign-middle">
                         <thead>
                         <tr>
-                            <th>Product</th>
-                            <th>Price</th>
-                            <th>Sales</th>
-                            <th>More</th>
+                            <th>#</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Total(user)</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td>
-                                Some Product
-                            </td>
-                            <td>$13 USD</td>
-                            <td>
-                                <small class="text-success mr-1">
-                                    <i class="fas fa-arrow-up"></i>
-                                    12%
-                                </small>
-                                12,000 Sold
-                            </td>
-                            <td>
-                                <a href="#" class="text-muted">
-                                    <i class="fas fa-search"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Another Product
-                            </td>
-                            <td>$29 USD</td>
-                            <td>
-                                <small class="text-warning mr-1">
-                                    <i class="fas fa-arrow-down"></i>
-                                    0.5%
-                                </small>
-                                123,234 Sold
-                            </td>
-                            <td>
-                                <a href="#" class="text-muted">
-                                    <i class="fas fa-search"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Amazing Product
-                            </td>
-                            <td>$1,230 USD</td>
-                            <td>
-                                <small class="text-danger mr-1">
-                                    <i class="fas fa-arrow-down"></i>
-                                    3%
-                                </small>
-                                198 Sold
-                            </td>
-                            <td>
-                                <a href="#" class="text-muted">
-                                    <i class="fas fa-search"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Perfect Item
-                                <span class="badge bg-danger">NEW</span>
-                            </td>
-                            <td>$199 USD</td>
-                            <td>
-                                <small class="text-success mr-1">
-                                    <i class="fas fa-arrow-up"></i>
-                                    63%
-                                </small>
-                                87 Sold
-                            </td>
-                            <td>
-                                <a href="#" class="text-muted">
-                                    <i class="fas fa-search"></i>
-                                </a>
-                            </td>
-                        </tr>
+                        {% for item in most_followed_users %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <a href="{% url 'users:user-detail' id=item.following__id %}">{{ item.following__username }}</a>
+                                </td>
+                                <td><p>{% if item.following__role == 1 %}Admin{% else %}Member{% endif %}</p>
+                                </td>
+                                <td>{{ item.total }}</td>
+                            </tr>
+                        {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -297,86 +173,26 @@
                     <table class="table table-striped table-valign-middle">
                         <thead>
                         <tr>
-                            <th>Product</th>
-                            <th>Price</th>
-                            <th>Sales</th>
-                            <th>More</th>
+                            <th>#</th>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Total (book)</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td>
-                                Some Product
-                            </td>
-                            <td>$13 USD</td>
-                            <td>
-                                <small class="text-success mr-1">
-                                    <i class="fas fa-arrow-up"></i>
-                                    12%
-                                </small>
-                                12,000 Sold
-                            </td>
-                            <td>
-                                <a href="#" class="text-muted">
-                                    <i class="fas fa-search"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Another Product
-                            </td>
-                            <td>$29 USD</td>
-                            <td>
-                                <small class="text-warning mr-1">
-                                    <i class="fas fa-arrow-down"></i>
-                                    0.5%
-                                </small>
-                                123,234 Sold
-                            </td>
-                            <td>
-                                <a href="#" class="text-muted">
-                                    <i class="fas fa-search"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Amazing Product
-                            </td>
-                            <td>$1,230 USD</td>
-                            <td>
-                                <small class="text-danger mr-1">
-                                    <i class="fas fa-arrow-down"></i>
-                                    3%
-                                </small>
-                                198 Sold
-                            </td>
-                            <td>
-                                <a href="#" class="text-muted">
-                                    <i class="fas fa-search"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Perfect Item
-                                <span class="badge bg-danger">NEW</span>
-                            </td>
-                            <td>$199 USD</td>
-                            <td>
-                                <small class="text-success mr-1">
-                                    <i class="fas fa-arrow-up"></i>
-                                    63%
-                                </small>
-                                87 Sold
-                            </td>
-                            <td>
-                                <a href="#" class="text-muted">
-                                    <i class="fas fa-search"></i>
-                                </a>
-                            </td>
-                        </tr>
+                        {% for item in most_read_book_members %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ item.user__id }}</td>
+                                <td>
+                                    <a href="{% url 'users:user-detail' id=item.user__id %}">{{ item.user__username }}</a>
+                                </td>
+                                <td><p>{% if item.user__role == 1 %}Admin{% else %}Member{% endif %}</p>
+                                </td>
+                                <td>{{ item.total }}</td>
+                            </tr>
+                        {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -402,85 +218,30 @@
                         <table class="table m-0">
                             <thead>
                             <tr>
+                                <th>#</th>
                                 <th>ID</th>
                                 <th>Username</th>
-                                <th>Status</th>
+                                <th>Role</th>
                                 <th>Last Login</th>
                             </tr>
                             </thead>
                             <tbody>
-                            <tr>
-                                <td><a href="pages/examples/invoice.html">OR9842</a></td>
-                                <td>Call of Duty IV</td>
-                                <td><span class="badge badge-success">Shipped</span></td>
-                                <td>
-                                    <div class="sparkbar" data-color="#00a65a" data-height="20">90,80,90,-70,61,-83,63
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><a href="pages/examples/invoice.html">OR1848</a></td>
-                                <td>Samsung Smart TV</td>
-                                <td><span class="badge badge-warning">Pending</span></td>
-                                <td>
-                                    <div class="sparkbar" data-color="#f39c12" data-height="20">90,80,-90,70,61,-83,68
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><a href="pages/examples/invoice.html">OR7429</a></td>
-                                <td>iPhone 6 Plus</td>
-                                <td><span class="badge badge-danger">Delivered</span></td>
-                                <td>
-                                    <div class="sparkbar" data-color="#f56954" data-height="20">90,-80,90,70,-61,83,63
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><a href="pages/examples/invoice.html">OR7429</a></td>
-                                <td>Samsung Smart TV</td>
-                                <td><span class="badge badge-info">Processing</span></td>
-                                <td>
-                                    <div class="sparkbar" data-color="#00c0ef" data-height="20">90,80,-90,70,-61,83,63
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><a href="pages/examples/invoice.html">OR1848</a></td>
-                                <td>Samsung Smart TV</td>
-                                <td><span class="badge badge-warning">Pending</span></td>
-                                <td>
-                                    <div class="sparkbar" data-color="#f39c12" data-height="20">90,80,-90,70,61,-83,68
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><a href="pages/examples/invoice.html">OR7429</a></td>
-                                <td>iPhone 6 Plus</td>
-                                <td><span class="badge badge-danger">Delivered</span></td>
-                                <td>
-                                    <div class="sparkbar" data-color="#f56954" data-height="20">90,-80,90,70,-61,83,63
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><a href="pages/examples/invoice.html">OR9842</a></td>
-                                <td>Call of Duty IV</td>
-                                <td><span class="badge badge-success">Shipped</span></td>
-                                <td>
-                                    <div class="sparkbar" data-color="#00a65a" data-height="20">90,80,90,-70,61,-83,63
-                                    </div>
-                                </td>
-                            </tr>
+                            {% for item in users_login %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ item.id }}</td>
+                                    <td>
+                                        <a href="{% url 'users:user-detail' id=item.id %}">{{ item.username }}</a>
+                                    </td>
+                                    <td><p>{% if item.role == 1 %}Admin{% else %}Member{% endif %}</p>
+                                    </td>
+                                    <td>{{ item.last_login }}</td>
+                                </tr>
+                            {% endfor %}
                             </tbody>
                         </table>
                     </div>
                     <!-- /.table-responsive -->
-                </div>
-                <!-- /.card-body -->
-                <div class="card-footer clearfix">
-                    <a href="javascript:void(0)" class="btn btn-sm btn-info float-left">Place New Order</a>
-                    <a href="javascript:void(0)" class="btn btn-sm btn-secondary float-right">View All Orders</a>
                 </div>
                 <!-- /.card-footer -->
             </div>
