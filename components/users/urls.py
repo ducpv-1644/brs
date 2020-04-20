@@ -9,7 +9,8 @@ from .views import (
     SignOutView,
     UserListView,
     ChangeRoleUserView,
-    UserFollowUpdateCreateView
+    UserFollowUpdateCreateView,
+    UserFollowedListView
 )
 
 app_name = 'users'
@@ -24,5 +25,6 @@ urlpatterns = [
     path('user/<int:id>/edit/', UserUpdateView.as_view(), name='user-update'),
     path('user/<int:id>/', UserDetailView.as_view(), name='user-detail'),
     path('dashboard/', AdminDashboardView.as_view(), name='dashboard'),
-    path('user/follow/', UserFollowUpdateCreateView.as_view(), name='user-follow')
+    path('user/follow/', UserFollowUpdateCreateView.as_view(), name='user-follow'),
+    path('user/followed/', UserFollowedListView.as_view(), name='user-followed')
 ]

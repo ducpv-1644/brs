@@ -1,4 +1,5 @@
 from django.core.files.storage import FileSystemStorage
+from django.core.paginator import Paginator
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.shortcuts import render, redirect
@@ -191,3 +192,17 @@ class AdminDashboardView(View):
 
         }
         return render(request, self.template_name, context=context)
+
+
+class UserFollowedListView(View):
+    template_name = 'user_followed_list.html'
+    paginate_by = 25
+
+    @method_decorator(login_required)
+    def get(self, request, *args, **kwargs):
+        users_followed = UserFollow.objects.filter(follower=request.user, status=UserFollow.STATUS_FOLLOW[1][0])
+
+        paginator = Paginator(users_followed, self.paginate_by)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        return render(request, self.template_name, {'users_followed': page_obj})

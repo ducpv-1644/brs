@@ -17,8 +17,8 @@
             <div class="card card-primary card-outline">
                 <div class="card-body box-profile">
                     <div class="text-center">
-                        <img class="profile-user-img img-fluid img-circle"
-                             src="{% if user.avatar %}/media/{{ user.avatar }}{% else %}{% static 'img/user2-160x160.jpg' %}{% endif %}"
+                        <img class="profile-user-img img-fluid img-circle" width="160" height="160"
+                             src="{% if member.avatar %}/media/{{ member.avatar }}{% else %}{% static 'img/user2-160x160.jpg' %}{% endif %}"
                              alt="User profile picture">
                     </div>
 
