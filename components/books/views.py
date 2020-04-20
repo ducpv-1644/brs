@@ -9,6 +9,7 @@ from django.views import View
 from django.contrib.postgres.search import SearchVector
 from django.db.models.query import Q
 from django.contrib import messages
+from django.db.models import Avg
 
 from components.users.decorators import admin_required
 from .models import (
@@ -19,7 +20,7 @@ from .forms import (
     BookCreateForm, BookUpdateForm,
     BookMarkReadForm, BookFavoriteForm,
     BookRequestBuyForm, BookRequestBuyUpdateForm,
-    BookReviewCreateForm, SearchBookForm
+    BookReviewCreateForm, SearchBookForm, BookRatingCreateForm
 )
 from utility.log_activity import ActivityLog
 
@@ -76,22 +77,19 @@ class BookDetailView(View):
         book_id = kwargs.get('id')
         book = get_object_or_404(Book, pk=book_id)
 
-        book_read_status_qs = None
-        if request.user:
-            book_read_status_qs = BookReadStatus.objects.filter(
-                book=book,
-                user=request.user
-            ).first()
-
+        book_read_status_qs = BookReadStatus.objects.filter(book=book)
         book_reviews_qs = BookReview.objects.filter(book_id=book_id).first()
+        rating = book_read_status_qs.aggregate(Avg('rating'))
         context = {
             'id': book_id,
             'book': book,
-            'status': book_read_status_qs,
+            'rating': round(rating['rating__avg']) if rating else 0,
+            'status': book_read_status_qs.filter(user=request.user).first(),
             'reviews': book_reviews_qs.messages if book_reviews_qs else [],
             'form_comment': kwargs.get('form_comment'),
             'form_bookmark': kwargs.get('form_bookmark'),
             'form_favorite': kwargs.get('form_favorite'),
+            'form_rating': kwargs.get('form_rating')
         }
         return render(request, self.template_name, context)
 
@@ -291,6 +289,30 @@ class BookReviewCreateView(BookDetailView):
                                 option_content=book_review_form.cleaned_data['message'])
             return redirect(reverse('book:book-detail', kwargs={'id': book_id}))
         kwargs.update({'form_comment': book_review_form})
+        response = self.get(request, **kwargs)
+        return response
+
+
+class BookRatingCreateView(BookDetailView):
+    form_class = BookRatingCreateForm
+
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        rating_form = self.form_class(request.POST)
+        if rating_form.is_valid():
+            book_read_status_qs = BookReadStatus.objects.filter(book__id=kwargs.get('id')).first()
+            if book_read_status_qs:
+                book_read_status_qs.rating = rating_form.cleaned_data['rating']
+                book_read_status_qs.save()
+            else:
+                book_read_status_qs = BookReadStatus.objects.create(
+                    book__id=kwargs.get('id'),
+                    rating=rating_form.cleaned_data['rating']
+                )
+                book_read_status_qs.user.add(request.user)
+                book_read_status_qs.save()
+            return redirect(reverse('book:book-detail', kwargs={'id': kwargs.get('id')}))
+        kwargs.update({'form_rating': rating_form})
         response = self.get(request, **kwargs)
         return response
 

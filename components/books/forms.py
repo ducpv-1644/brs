@@ -54,5 +54,9 @@ class BookReviewCreateForm(forms.Form):
     message = forms.CharField(max_length=512)
 
 
+class BookRatingCreateForm(forms.Form):
+    rating = forms.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+
+
 class SearchBookForm(forms.Form):
     q = forms.CharField(max_length=128)

@@ -78,3 +78,12 @@
         </div>
     </div>
 {% endblock %}
+{% block custom_js %}
+    <script>
+        {% for book in books %}
+            var book = '{{ book.to_json|escapejs }}';
+            JSON.parse(book);
+            console.log(book);
+        {% endfor %}
+    </script>
+{% endblock %}

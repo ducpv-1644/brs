@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
@@ -59,6 +60,7 @@ class BookReadStatus(BookBase):
     status = models.IntegerField(choices=STATUS_CHOICES, default=0)
     page_reading = models.IntegerField(default=0)
     is_favorite = models.BooleanField(default=False)
+    rating = models.IntegerField(default=0, validators=[MaxValueValidator(5), MinValueValidator(0)])
 
     class Meta:
         db_table = 'book_read_status'

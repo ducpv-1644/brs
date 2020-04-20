@@ -12,6 +12,10 @@
         <a href="{% url 'book:book-detail' id=book.id %}">{{ book.id }}</a>
     </li>
 {% endblock %}
+{% block custom_css %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{% static 'css/better-rating.css' %}">
+{% endblock %}
 {% block content %}
 
     <div class="card card-solid">
@@ -25,11 +29,21 @@
                 </div>
                 <div class="col-12 col-sm-8">
                     <h3 class="my-3">{{ book.name }}</h3>
-                    <h4>Book details</h4>
+                    <div class="rating" data-toggle="modal" data-target="#modal-sm">
+                        {% for i in '12345'|make_list %}
+                            {% if forloop.counter <= rating %}
+                                <span class="fa fa-star hover"></span>
+                            {% else %}
+                                <span class="fa fa-star"></span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <br>
                     <div class="text-muted">
                         <p class="text-sm">Category
                             {% for category in book.book_category.all %}
-                                <b class="d-block">{{ category.name }}</b>
+                                <b class="d-block"><a
+                                        href="{% url 'book:book-list' %}?category={{ category.name|urlencode }}">{{ category.name }}</a></b>
                             {% endfor %}
                         </p>
                         <p class="text-sm">Author
@@ -202,7 +216,7 @@
 
                     </div>
                     <div class="modal-footer justify-content-between">
-                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="submit" class="btn btn-primary">Post</button>
                     </div>
                 </form>
             </div>
@@ -210,8 +224,37 @@
         </div>
         <!-- /.modal-dialog -->
     </div>
+    <div class="modal fade" id="modal-sm" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Rating for book</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="{% url 'book:book-rating' id=book.id %}" method="POST" id="better-rating-form">
+                        {% csrf_token %}
+                        <div class="rating">
+                            <i class="fa fa-star" data-rate="1"></i>
+                            <i class="fa fa-star" data-rate="2"></i>
+                            <i class="fa fa-star" data-rate="3"></i>
+                            <i class="fa fa-star" data-rate="4"></i>
+                            <i class="fa fa-star" data-rate="5"></i>
+                            <input type="hidden" id="rating-count" name="rating" value="0">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Rate</button>
+                    </form>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
 {% endblock %}
 {% block custom_js %}
+    <script src="{% static 'js/better-rating.js' %}"></script>
     <script type="text/javascript">
         $(document).ready(function () {
             {% if form_bookmark.errors %}
@@ -220,7 +263,14 @@
                 toastr.error('Comment a book fail!');
             {% elif form_favorite.errors %}
                 toastr.error('Like a book fail!');
+            {% elif form_rating.errors %}
+                toastr.error('Rating a book fail!');
             {% endif %}
+
+            $('#better-rating-form').betterRating({
+                    wrapper: '#better-rating-list'
+                }
+            );
         })
     </script>
 {% endblock %}
