@@ -144,10 +144,10 @@
                         {% for review in reviews %}
                             <div class="post">
                                 <div class="user-block">
-                                    <img class="img-circle img-bordered-sm" src="{% static 'img/user1-128x128.jpg' %}"
+                                    <img class="img-circle img-bordered-sm" src="{% if review.4 %}/media/{{ review.4 }}{% else %}{% static 'img/user1-128x128.jpg' %}{% endif %}"
                                          alt="user image">
                                     <span class="username">
-                                    <a href="#">{{ review.0 }}</a>
+                                    <a href="{% url 'users:user-detail' id=review.3 %}">{{ review.0 }}</a>
                                     <a href="#" class="float-right btn-tool"><i class="fas fa-times"></i></a>
                                 </span>
                                     <span class="description">Shared publicly - {{ review.2 }}</span>

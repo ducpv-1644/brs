@@ -92,7 +92,7 @@ class BookRequestBuy(BookBase):
 
 class BookReview(BookBase):
     book = models.OneToOneField(Book, on_delete=models.CASCADE)
-    messages = ArrayField(ArrayField(models.CharField(max_length=512, blank=True)))
+    messages = ArrayField(ArrayField(models.CharField(max_length=512, blank=True), size=5))
 
     class Meta:
         db_table = 'book_review'

@@ -274,16 +274,24 @@ class BookReviewCreateView(BookDetailView):
             if book_review_qs:
                 book_messages_review = book_review_qs.messages
                 book_messages_review.append(
-                    [request.user.username, book_review_form.cleaned_data['message'],
-                     now.strftime("%m/%d/%Y, %H:%M:%S")]
+                    [request.user.username,
+                     book_review_form.cleaned_data['message'],
+                     now.strftime("%m/%d/%Y, %H:%M:%S"),
+                     str(request.user.id),
+                     str(request.user.avatar.name)]
                 )
                 book_review_qs.messages = book_messages_review
                 book_review_qs.save()
             else:
                 book_review_qs = BookReview.objects.create(
                     book=book,
-                    messages=[[request.user.username, book_review_form.cleaned_data['message'],
-                               now.strftime("%m/%d/%Y, %H:%M:%S")]]
+                    messages=[
+                        [request.user.username,
+                         book_review_form.cleaned_data['message'],
+                         now.strftime("%m/%d/%Y, %H:%M:%S"),
+                         str(request.user.id),
+                         str(request.user.avatar.name)
+                         ]]
                 )
             logger.log_activity(source_user=request.user, obj_target=book_review_qs, activity=logger.COMMENT,
                                 option_content=book_review_form.cleaned_data['message'])
