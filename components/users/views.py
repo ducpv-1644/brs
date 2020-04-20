@@ -167,7 +167,8 @@ class UserFollowUpdateCreateView(UserDetailView):
             status = follow_form.cleaned_data['status']
             follow_qs = UserFollow.objects.filter(follower=follower, following__id=following).first()
             if not follow_qs:
-                UserFollow.objects.create(follower=follower, following__=following, status=status)
+                following_user = User.objects.get(id=following)
+                UserFollow.objects.create(follower=follower, following=following_user, status=status)
             else:
                 follow_qs.status = status
                 follow_qs.save()
