@@ -86,7 +86,35 @@ Updating
 
 ## Deployment
 
-Updating
+Create static folder. Example:
+
+```sh
+cd brs
+mkdir root_static
+```
+
+Put name `root_static` into `.env` file.
+
+Collectstatic
+
+```sh
+$ python manage.py collectstatic
+1986 static files copied to '/Users/minhhahao/workspace/first-project-training/brs/root_static'.
+```
+
+Config project path and log in `uwsgi.ini`
+
+```ini
+base=path-to-project
+daemonize=path-to-log-file
+```
+
+Run code in server
+
+```sh
+uwsgi --ini uwsgi.ini
+```
+
 ## Built With
 
 * [Django](https://www.djangoproject.com/) - The web framework used
