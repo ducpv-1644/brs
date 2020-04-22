@@ -80,10 +80,11 @@ class BookDetailView(View):
         book_read_status_qs = BookReadStatus.objects.filter(book=book)
         book_reviews_qs = BookReview.objects.filter(book_id=book_id).first()
         rating = book_read_status_qs.aggregate(Avg('rating'))
+        rating = round(rating['rating__avg']) if rating['rating__avg'] else 0
         context = {
             'id': book_id,
             'book': book,
-            'rating': round(rating['rating__avg']) if rating else 0,
+            'rating': rating,
             'status': book_read_status_qs.filter(user=request.user).first(),
             'reviews': book_reviews_qs.messages if book_reviews_qs else [],
             'form_comment': kwargs.get('form_comment'),
